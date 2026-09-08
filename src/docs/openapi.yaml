@@ -1,0 +1,390 @@
+openapi: 3.0.0
+
+info:
+  title: API Banco de Questões
+  description: API REST para gerenciamento de questões de Matemática
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+
+  /questoes:
+    get:
+      summary: Lista questões com filtro, busca e paginação
+      parameters:
+        - name: dificuldade
+          in: query
+          required: false
+          schema:
+            type: string
+          example: facil
+
+        - name: busca
+          in: query
+          required: false
+          schema:
+            type: string
+          example: equação
+
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          example: 1
+
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          example: 2
+
+      responses:
+        '200':
+          description: Lista de questões
+
+    post:
+      summary: Cria uma questão
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Questao'
+      responses:
+        '201':
+          description: Questão criada
+        '400':
+          description: Dados inválidos
+
+  /questoes/{id}:
+    get:
+      summary: Busca uma questão por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Questão encontrada
+        '404':
+          description: Questão não encontrada
+
+    put:
+      summary: Substitui uma questão
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Questao'
+      responses:
+        '200':
+          description: Questão atualizada
+        '400':
+          description: Dados inválidos
+        '404':
+          description: Questão não encontrada
+
+    patch:
+      summary: Atualiza parcialmente uma questão
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Questao'
+      responses:
+        '200':
+          description: Questão atualizada
+        '400':
+          description: Dados inválidos
+        '404':
+          description: Questão não encontrada
+
+    delete:
+      summary: Exclui uma questão
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Questão excluída
+        '404':
+          description: Questão não encontrada
+
+
+  /disciplinas:
+    get:
+      summary: Lista todas as disciplinas
+      responses:
+        '200':
+          description: Lista de disciplinas
+
+    post:
+      summary: Cria uma disciplina
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Disciplina'
+      responses:
+        '201':
+          description: Disciplina criada
+        '400':
+          description: Nome obrigatório
+        '409':
+          description: Disciplina já cadastrada
+
+
+  /disciplinas/{id}:
+    get:
+      summary: Busca uma disciplina por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Disciplina encontrada
+        '404':
+          description: Disciplina não encontrada
+
+    put:
+      summary: Substitui uma disciplina
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Disciplina'
+      responses:
+        '200':
+          description: Disciplina atualizada
+        '400':
+          description: Nome obrigatório
+        '404':
+          description: Disciplina não encontrada
+
+    patch:
+      summary: Atualiza parcialmente uma disciplina
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Disciplina'
+      responses:
+        '200':
+          description: Disciplina atualizada
+        '404':
+          description: Disciplina não encontrada
+
+    delete:
+      summary: Exclui uma disciplina
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Disciplina excluída
+        '404':
+          description: Disciplina não encontrada
+
+
+  /disciplinas/{id}/questoes:
+    get:
+      summary: Lista questões de uma disciplina
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Questões da disciplina
+        '404':
+          description: Disciplina não encontrada
+
+
+  /categorias:
+    get:
+      summary: Lista todas as categorias
+      responses:
+        '200':
+          description: Lista de categorias
+
+    post:
+      summary: Cria uma categoria
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Categoria'
+      responses:
+        '201':
+          description: Categoria criada
+        '400':
+          description: Nome obrigatório
+        '409':
+          description: Categoria já cadastrada
+
+
+  /categorias/{id}:
+    get:
+      summary: Busca uma categoria por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Categoria encontrada
+        '404':
+          description: Categoria não encontrada
+
+    put:
+      summary: Substitui uma categoria
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Categoria'
+      responses:
+        '200':
+          description: Categoria atualizada
+        '400':
+          description: Nome obrigatório
+        '404':
+          description: Categoria não encontrada
+
+    patch:
+      summary: Atualiza parcialmente uma disciplina
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Categoria'
+      responses:
+        '200':
+          description: Categoria atualizada
+        '404':
+          description: Categoria não encontrada
+
+    delete:
+      summary: Exclui uma categoria
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Categoria excluída
+        '404':
+          description: Categoria não encontrada
+
+
+components:
+  schemas:
+
+    Questao:
+      type: object
+      required:
+        - enunciado
+        - disciplinaId
+        - categoriaId
+        - dificuldade
+      properties:
+        id:
+          type: integer
+          example: 1
+        enunciado:
+          type: string
+          example: Qual é o resultado de 2 + 3?
+        disciplinaId:
+          type: integer
+          example: 1
+        categoriaId:
+          type: integer
+          example: 1
+        dificuldade:
+          type: string
+          example: facil
+
+    Disciplina:
+      type: object
+      required:
+        - nome
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Matemática
+
+    Categoria:
+      type: object
+      required:
+        - nome
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: Equação do 2º grau
