@@ -2,17 +2,22 @@ openapi: 3.0.0
 
 info:
   title: API Banco de Questões
-  description: API REST para gerenciamento de questões de Matemática
-  version: 1.0.0
+  description: >
+    API REST para gerenciamento de um Banco de Questões de Matemática.
+    Utiliza Node.js, Express, PostgreSQL e Sequelize ORM, com persistência
+    de dados, relacionamentos, migrations e transações.
+  version: 2.0.0
 
 servers:
   - url: http://localhost:3000
+    description: Servidor local
 
 paths:
 
   /questoes:
     get:
-      summary: Lista questões com filtro, busca e paginação
+      summary: Lista questões
+      description: Lista questões com filtros, busca, paginação e ordenação.
       parameters:
         - name: dificuldade
           in: query
@@ -26,7 +31,7 @@ paths:
           required: false
           schema:
             type: string
-          example: equação
+          example: porcentagem
 
         - name: page
           in: query
@@ -42,35 +47,66 @@ paths:
           schema:
             type: integer
             default: 10
-          example: 2
+          example: 10
+
+        - name: ordenar
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - id
+              - enunciado
+              - dificuldade
+              - createdAt
+          example: id
+
+        - name: direcao
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          example: asc
 
       responses:
         '200':
-          description: Lista de questões
+          description: Lista de questões retornada com sucesso
+        '500':
+          description: Erro interno do servidor
+        '503':
+          description: Falha de conexão com o banco de dados
 
     post:
       summary: Cria uma questão
+      description: >
+        Cria uma nova questão e permite relacioná-la a um ou mais assuntos.
+        A criação da questão e dos relacionamentos é realizada em uma transação.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Questao'
+              $ref: '#/components/schemas/QuestaoEntrada'
       responses:
         '201':
-          description: Questão criada
+          description: Questão criada com sucesso
         '400':
           description: Dados inválidos
+        '404':
+          description: Disciplina, categoria ou assunto não encontrado
+        '409':
+          description: Conflito de integridade
+        '500':
+          description: Erro interno do servidor
 
   /questoes/{id}:
     get:
       summary: Busca uma questão por ID
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/Id'
       responses:
         '200':
           description: Questão encontrada
@@ -80,61 +116,52 @@ paths:
     put:
       summary: Substitui uma questão
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/Id'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Questao'
+              $ref: '#/components/schemas/QuestaoEntrada'
       responses:
         '200':
           description: Questão atualizada
         '400':
           description: Dados inválidos
         '404':
-          description: Questão não encontrada
+          description: Questão, disciplina, categoria ou assunto não encontrado
+        '409':
+          description: Conflito de integridade
 
     patch:
       summary: Atualiza parcialmente uma questão
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/Id'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Questao'
+              $ref: '#/components/schemas/QuestaoAtualizacao'
       responses:
         '200':
           description: Questão atualizada
         '400':
           description: Dados inválidos
         '404':
-          description: Questão não encontrada
+          description: Questão, disciplina, categoria ou assunto não encontrado
+        '409':
+          description: Conflito de integridade
 
     delete:
       summary: Exclui uma questão
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/Id'
       responses:
         '204':
           description: Questão excluída
         '404':
           description: Questão não encontrada
-
 
   /disciplinas:
     get:
@@ -155,20 +182,15 @@ paths:
         '201':
           description: Disciplina criada
         '400':
-          description: Nome obrigatório
+          description: Nome obrigatório ou dados inválidos
         '409':
           description: Disciplina já cadastrada
-
 
   /disciplinas/{id}:
     get:
       summary: Busca uma disciplina por ID
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/Id'
       responses:
         '200':
           description: Disciplina encontrada
@@ -178,11 +200,7 @@ paths:
     put:
       summary: Substitui uma disciplina
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/Id'
       requestBody:
         required: true
         content:
@@ -196,51 +214,52 @@ paths:
           description: Nome obrigatório
         '404':
           description: Disciplina não encontrada
+        '409':
+          description: Nome já cadastrado
 
     patch:
       summary: Atualiza parcialmente uma disciplina
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/Disciplina'
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Disciplina'
       responses:
         '200':
           description: Disciplina atualizada
         '404':
           description: Disciplina não encontrada
+        '409':
+          description: Nome já cadastrado
 
     delete:
       summary: Exclui uma disciplina
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/Id'
       responses:
         '204':
           description: Disciplina excluída
         '404':
           description: Disciplina não encontrada
-
+        '409':
+          description: >
+            Exclusão não permitida porque existem questões relacionadas
+            à disciplina
 
   /disciplinas/{id}/questoes:
     get:
-      summary: Lista questões de uma disciplina
+      summary: Lista as questões de uma disciplina
+      description: Endpoint de consulta de dados relacionados.
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/Id'
       responses:
         '200':
-          description: Questões da disciplina
+          description: Questões relacionadas à disciplina
         '404':
           description: Disciplina não encontrada
-
 
   /categorias:
     get:
@@ -261,20 +280,15 @@ paths:
         '201':
           description: Categoria criada
         '400':
-          description: Nome obrigatório
+          description: Nome obrigatório ou dados inválidos
         '409':
           description: Categoria já cadastrada
-
 
   /categorias/{id}:
     get:
       summary: Busca uma categoria por ID
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/Id'
       responses:
         '200':
           description: Categoria encontrada
@@ -284,11 +298,7 @@ paths:
     put:
       summary: Substitui uma categoria
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/Id'
       requestBody:
         required: true
         content:
@@ -302,15 +312,13 @@ paths:
           description: Nome obrigatório
         '404':
           description: Categoria não encontrada
+        '409':
+          description: Nome já cadastrado
 
     patch:
-      summary: Atualiza parcialmente uma disciplina
+      summary: Atualiza parcialmente uma categoria
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/Id'
       requestBody:
         required: true
         content:
@@ -322,39 +330,129 @@ paths:
           description: Categoria atualizada
         '404':
           description: Categoria não encontrada
+        '409':
+          description: Nome já cadastrado
 
     delete:
       summary: Exclui uma categoria
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/Id'
       responses:
         '204':
           description: Categoria excluída
         '404':
           description: Categoria não encontrada
+        '409':
+          description: >
+            Exclusão não permitida porque existem questões relacionadas
+            à categoria
 
+  /assuntos:
+    get:
+      summary: Lista todos os assuntos
+      responses:
+        '200':
+          description: Lista de assuntos
+
+    post:
+      summary: Cria um assunto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Assunto'
+      responses:
+        '201':
+          description: Assunto criado
+        '400':
+          description: Nome obrigatório ou dados inválidos
+        '409':
+          description: Assunto já cadastrado
+
+  /assuntos/{id}:
+    get:
+      summary: Busca um assunto por ID
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Assunto encontrado
+        '404':
+          description: Assunto não encontrado
+
+    put:
+      summary: Substitui um assunto
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Assunto'
+      responses:
+        '200':
+          description: Assunto atualizado
+        '400':
+          description: Nome obrigatório
+        '404':
+          description: Assunto não encontrado
+        '409':
+          description: Nome já cadastrado
+
+    patch:
+      summary: Atualiza parcialmente um assunto
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Assunto'
+      responses:
+        '200':
+          description: Assunto atualizado
+        '404':
+          description: Assunto não encontrado
+        '409':
+          description: Nome já cadastrado
+
+    delete:
+      summary: Exclui um assunto
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '204':
+          description: Assunto excluído
+        '404':
+          description: Assunto não encontrado
 
 components:
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      description: Identificador do registro
+      schema:
+        type: integer
+        minimum: 1
+
   schemas:
 
-    Questao:
+    QuestaoEntrada:
       type: object
       required:
         - enunciado
         - disciplinaId
         - categoriaId
-        - dificuldade
       properties:
-        id:
-          type: integer
-          example: 1
         enunciado:
           type: string
-          example: Qual é o resultado de 2 + 3?
+          example: Qual é 20% de 100?
         disciplinaId:
           type: integer
           example: 1
@@ -363,16 +461,45 @@ components:
           example: 1
         dificuldade:
           type: string
+          default: media
           example: facil
+        assuntoIds:
+          type: array
+          description: IDs dos assuntos relacionados à questão
+          items:
+            type: integer
+          example:
+            - 1
+            - 2
+
+    QuestaoAtualizacao:
+      type: object
+      properties:
+        enunciado:
+          type: string
+          example: Qual é 25% de 200?
+        disciplinaId:
+          type: integer
+          example: 1
+        categoriaId:
+          type: integer
+          example: 1
+        dificuldade:
+          type: string
+          example: media
+        assuntoIds:
+          type: array
+          items:
+            type: integer
+          example:
+            - 1
+            - 2
 
     Disciplina:
       type: object
       required:
         - nome
       properties:
-        id:
-          type: integer
-          example: 1
         nome:
           type: string
           example: Matemática
@@ -382,9 +509,15 @@ components:
       required:
         - nome
       properties:
-        id:
-          type: integer
-          example: 1
         nome:
           type: string
-          example: Equação do 2º grau
+          example: Problemas
+
+    Assunto:
+      type: object
+      required:
+        - nome
+      properties:
+        nome:
+          type: string
+          example: Porcentagem

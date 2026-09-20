@@ -1,132 +1,144 @@
-const { disciplinas, questoes } = require('../data/db-memoria');
+const repository = require('../repositories/disciplinas.repository');
 
 // GET /disciplinas
-function listarDisciplinas(req, res) {
-    res.status(200).json(disciplinas);
+async function listarDisciplinas(req, res, next) {
+    try {
+        const disciplinas = await repository.listarTodas();
+
+        res.status(200).json(disciplinas);
+    } catch (erro) {
+        next(erro);
+    }
 }
 
 // GET /disciplinas/:id
-function buscarDisciplinaPorId(req, res) {
-    const id = Number(req.params.id);
+async function buscarDisciplinaPorId(req, res, next) {
+    try {
+        const id = Number(req.params.id);
 
-    const disciplina = disciplinas.find(d => d.id === id);
+        const disciplina = await repository.buscarPorId(id);
 
-    if (!disciplina) {
-        return res.status(404).json({
-            erro: 'Disciplina não encontrada'
-        });
+        if (!disciplina) {
+            return res.status(404).json({
+                erro: 'Disciplina não encontrada'
+            });
+        }
+
+        res.status(200).json(disciplina);
+    } catch (erro) {
+        next(erro);
     }
-
-    res.status(200).json(disciplina);
 }
 
 // POST /disciplinas
-function criarDisciplina(req, res) {
-    if (!req.body || !req.body.nome) {
-        return res.status(400).json({
-            erro: 'O nome é obrigatório'
+async function criarDisciplina(req, res, next) {
+    try {
+        if (!req.body || !req.body.nome) {
+            return res.status(400).json({
+                erro: 'O nome é obrigatório'
+            });
+        }
+
+        const novaDisciplina = await repository.criar({
+            nome: req.body.nome
         });
+
+        res.status(201).json(novaDisciplina);
+    } catch (erro) {
+        next(erro);
     }
-
-    const existe = disciplinas.some(
-        d => d.nome.toLowerCase() === req.body.nome.toLowerCase()
-    );
-
-    if (existe) {
-        return res.status(409).json({
-            erro: 'Disciplina já cadastrada'
-        });
-    }
-
-    const novaDisciplina = {
-        id: disciplinas.length + 1,
-        nome: req.body.nome
-    };
-
-    disciplinas.push(novaDisciplina);
-
-    res.status(201).json(novaDisciplina);
 }
 
 // PUT /disciplinas/:id
-function substituirDisciplina(req, res) {
-    const id = Number(req.params.id);
+async function substituirDisciplina(req, res, next) {
+    try {
+        const id = Number(req.params.id);
 
-    const indice = disciplinas.findIndex(d => d.id === id);
+        if (!req.body || !req.body.nome) {
+            return res.status(400).json({
+                erro: 'O nome é obrigatório'
+            });
+        }
 
-    if (indice === -1) {
-        return res.status(404).json({
-            erro: 'Disciplina não encontrada'
+        const disciplina = await repository.atualizar(id, {
+            nome: req.body.nome
         });
+
+        if (!disciplina) {
+            return res.status(404).json({
+                erro: 'Disciplina não encontrada'
+            });
+        }
+
+        res.status(200).json(disciplina);
+    } catch (erro) {
+        next(erro);
     }
-
-    if (!req.body || !req.body.nome) {
-        return res.status(400).json({
-            erro: 'O nome é obrigatório'
-        });
-    }
-
-    disciplinas[indice] = {
-        id: id,
-        nome: req.body.nome
-    };
-
-    res.status(200).json(disciplinas[indice]);
 }
 
 // PATCH /disciplinas/:id
-function atualizarDisciplina(req, res) {
-    const id = Number(req.params.id);
+async function atualizarDisciplina(req, res, next) {
+    try {
+        const id = Number(req.params.id);
 
-    const disciplina = disciplinas.find(d => d.id === id);
+        const dados = {};
 
-    if (!disciplina) {
-        return res.status(404).json({
-            erro: 'Disciplina não encontrada'
-        });
+        if (req.body.nome !== undefined) {
+            dados.nome = req.body.nome;
+        }
+
+        const disciplina = await repository.atualizar(id, dados);
+
+        if (!disciplina) {
+            return res.status(404).json({
+                erro: 'Disciplina não encontrada'
+            });
+        }
+
+        res.status(200).json(disciplina);
+    } catch (erro) {
+        next(erro);
     }
-
-    if (req.body.nome !== undefined) {
-        disciplina.nome = req.body.nome;
-    }
-
-    res.status(200).json(disciplina);
 }
 
 // DELETE /disciplinas/:id
-function excluirDisciplina(req, res) {
-    const id = Number(req.params.id);
+async function excluirDisciplina(req, res, next) {
+    try {
+        const id = Number(req.params.id);
 
-    const indice = disciplinas.findIndex(d => d.id === id);
+        const disciplina = await repository.excluir(id);
 
-    if (indice === -1) {
-        return res.status(404).json({
-            erro: 'Disciplina não encontrada'
-        });
+        if (!disciplina) {
+            return res.status(404).json({
+                erro: 'Disciplina não encontrada'
+            });
+        }
+
+        res.status(204).send();
+    } catch (erro) {
+        next(erro);
     }
-
-    disciplinas.splice(indice, 1);
-
-    res.status(204).send();
 }
 
 // GET /disciplinas/:id/questoes
-function listarQuestoesDaDisciplina(req, res) {
-    const id = Number(req.params.id);
+async function listarQuestoesDaDisciplina(req, res, next) {
+    try {
+        const id = Number(req.params.id);
 
-    const disciplina = disciplinas.find(d => d.id === id);
+        const disciplina = await repository.buscarPorId(id);
 
-    if (!disciplina) {
-        return res.status(404).json({
-            erro: 'Disciplina não encontrada'
-        });
+        if (!disciplina) {
+            return res.status(404).json({
+                erro: 'Disciplina não encontrada'
+            });
+        }
+
+        const questoes = await repository.listarQuestoes(id);
+
+        res.status(200).json(questoes);
+    } catch (erro) {
+        next(erro);
     }
-
-    const questoesDaDisciplina = questoes.filter(
-        q => q.disciplinaId === id
-    );
-
-    res.status(200).json(questoesDaDisciplina);
 }
 
 module.exports = {

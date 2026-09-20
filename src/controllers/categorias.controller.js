@@ -1,113 +1,123 @@
-const { categorias } = require('../data/db-memoria');
+const repository = require('../repositories/categorias.repository');
 
 // GET /categorias
-function listarCategorias(req, res) {
-    res.status(200).json(categorias);
+async function listarCategorias(req, res, next) {
+    try {
+        const categorias = await repository.listarTodas();
+
+        res.status(200).json(categorias);
+    } catch (erro) {
+        next(erro);
+    }
 }
 
 // GET /categorias/:id
-function buscarCategoriaPorId(req, res) {
-    const id = Number(req.params.id);
+async function buscarCategoriaPorId(req, res, next) {
+    try {
+        const id = Number(req.params.id);
 
-    const categoria = categorias.find(c => c.id === id);
+        const categoria = await repository.buscarPorId(id);
 
-    if (!categoria) {
-        return res.status(404).json({
-            erro: 'Categoria não encontrada'
-        });
+        if (!categoria) {
+            return res.status(404).json({
+                erro: 'Categoria não encontrada'
+            });
+        }
+
+        res.status(200).json(categoria);
+    } catch (erro) {
+        next(erro);
     }
-
-    res.status(200).json(categoria);
 }
 
 // POST /categorias
-function criarCategoria(req, res) {
-    if (!req.body || !req.body.nome) {
-        return res.status(400).json({
-            erro: 'O nome é obrigatório'
+async function criarCategoria(req, res, next) {
+    try {
+        if (!req.body || !req.body.nome) {
+            return res.status(400).json({
+                erro: 'O nome é obrigatório'
+            });
+        }
+
+        const novaCategoria = await repository.criar({
+            nome: req.body.nome
         });
+
+        res.status(201).json(novaCategoria);
+    } catch (erro) {
+        next(erro);
     }
-
-    const existe = categorias.some(
-        c => c.nome.toLowerCase() === req.body.nome.toLowerCase()
-    );
-
-    if (existe) {
-        return res.status(409).json({
-            erro: 'Categoria já cadastrada'
-        });
-    }
-
-    const novaCategoria = {
-        id: categorias.length + 1,
-        nome: req.body.nome
-    };
-
-    categorias.push(novaCategoria);
-
-    res.status(201).json(novaCategoria);
 }
 
 // PUT /categorias/:id
-function substituirCategoria(req, res) {
-    const id = Number(req.params.id);
+async function substituirCategoria(req, res, next) {
+    try {
+        const id = Number(req.params.id);
 
-    const indice = categorias.findIndex(c => c.id === id);
+        if (!req.body || !req.body.nome) {
+            return res.status(400).json({
+                erro: 'O nome é obrigatório'
+            });
+        }
 
-    if (indice === -1) {
-        return res.status(404).json({
-            erro: 'Categoria não encontrada'
+        const categoria = await repository.atualizar(id, {
+            nome: req.body.nome
         });
+
+        if (!categoria) {
+            return res.status(404).json({
+                erro: 'Categoria não encontrada'
+            });
+        }
+
+        res.status(200).json(categoria);
+    } catch (erro) {
+        next(erro);
     }
-
-    if (!req.body || !req.body.nome) {
-        return res.status(400).json({
-            erro: 'O nome é obrigatório'
-        });
-    }
-
-    categorias[indice] = {
-        id: id,
-        nome: req.body.nome
-    };
-
-    res.status(200).json(categorias[indice]);
 }
 
 // PATCH /categorias/:id
-function atualizarCategoria(req, res) {
-    const id = Number(req.params.id);
+async function atualizarCategoria(req, res, next) {
+    try {
+        const id = Number(req.params.id);
 
-    const categoria = categorias.find(c => c.id === id);
+        const dados = {};
 
-    if (!categoria) {
-        return res.status(404).json({
-            erro: 'Categoria não encontrada'
-        });
+        if (req.body.nome !== undefined) {
+            dados.nome = req.body.nome;
+        }
+
+        const categoria = await repository.atualizar(id, dados);
+
+        if (!categoria) {
+            return res.status(404).json({
+                erro: 'Categoria não encontrada'
+            });
+        }
+
+        res.status(200).json(categoria);
+    } catch (erro) {
+        next(erro);
     }
-
-    if (req.body.nome !== undefined) {
-        categoria.nome = req.body.nome;
-    }
-
-    res.status(200).json(categoria);
 }
 
 // DELETE /categorias/:id
-function excluirCategoria(req, res) {
-    const id = Number(req.params.id);
+async function excluirCategoria(req, res, next) {
+    try {
+        const id = Number(req.params.id);
 
-    const indice = categorias.findIndex(c => c.id === id);
+        const categoria = await repository.excluir(id);
 
-    if (indice === -1) {
-        return res.status(404).json({
-            erro: 'Categoria não encontrada'
-        });
+        if (!categoria) {
+            return res.status(404).json({
+                erro: 'Categoria não encontrada'
+            });
+        }
+
+        res.status(204).send();
+    } catch (erro) {
+        next(erro);
     }
-
-    categorias.splice(indice, 1);
-
-    res.status(204).send();
 }
 
 module.exports = {

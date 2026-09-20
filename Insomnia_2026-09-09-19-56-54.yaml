@@ -1,0 +1,848 @@
+type: spec.insomnia.rest/5.0
+schema_version: "5.1"
+name: API Banco de Questões 1.0.0
+meta:
+  id: wrk_9fbe17b238e44bb09d17e29047e2d42f
+  created: 1788994528751
+  modified: 1788994528751
+  description: ""
+collection:
+  - url: "{{ _.base_url }}/questoes"
+    name: Lista questões com filtro, busca e paginação
+    meta:
+      id: req_f27dd9c60af24ff38acc4a34c8c9b81e
+      created: 1788994528763
+      modified: 1788994528763
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528763
+    method: GET
+    parameters:
+      - name: dificuldade
+        value: string
+        disabled: true
+      - name: busca
+        value: string
+        disabled: true
+      - name: page
+        value: "1"
+        disabled: true
+      - name: limit
+        value: "10"
+        disabled: true
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/questoes/:id"
+    name: Busca uma questão por ID
+    meta:
+      id: req_1b83b5c7bc984ae7b16267d7f82b0ace
+      created: 1788994528765
+      modified: 1788994528765
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528765
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/questoes"
+    name: Cria uma questão
+    meta:
+      id: req_470d03751d8c4077a15cb244dea989e7
+      created: 1788994528765
+      modified: 1788994528765
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528765
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "id": 1,
+          "enunciado": "Qual é o resultado de 2 + 3?",
+          "disciplinaId": 1,
+          "categoriaId": 1,
+          "dificuldade": "facil"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/questoes/:id"
+    name: Substitui uma questão
+    meta:
+      id: req_4365f5d98eaa403987d5a70b57e92cbb
+      created: 1788994528766
+      modified: 1788994528766
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528766
+    method: PUT
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "id": 1,
+          "enunciado": "Qual é o resultado de 2 + 3?",
+          "disciplinaId": 1,
+          "categoriaId": 1,
+          "dificuldade": "facil"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/questoes/:id"
+    name: Atualiza parcialmente uma questão
+    meta:
+      id: req_ebc8bf6279714393bd9022997bc2e04e
+      created: 1788994528767
+      modified: 1788994528767
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528767
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "id": 1,
+          "enunciado": "Qual é o resultado de 2 + 3?",
+          "disciplinaId": 1,
+          "categoriaId": 1,
+          "dificuldade": "facil"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/questoes/:id"
+    name: Exclui uma questão
+    meta:
+      id: req_34f96ee374ed477ba904acf856614d35
+      created: 1788994528768
+      modified: 1788994528768
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528768
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/disciplinas"
+    name: Lista todas as disciplinas
+    meta:
+      id: req_ce405a07f6aa4610b0559634ad42b119
+      created: 1788994528770
+      modified: 1788994528770
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528770
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/disciplinas"
+    name: Cria uma disciplina
+    meta:
+      id: req_df77d57d142f48519f4761e2e82e4874
+      created: 1788994528771
+      modified: 1788994528771
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528771
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "id": 1,
+          "nome": "Matemática"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/disciplinas/:id"
+    name: Busca uma disciplina por ID
+    meta:
+      id: req_38e20df0901f434ca8f4e8a8cd1be8a6
+      created: 1788994528772
+      modified: 1788994528772
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528772
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/disciplinas/:id"
+    name: Substitui uma disciplina
+    meta:
+      id: req_c3e4b8fe95e740c496d6f242b057c1c9
+      created: 1788994528773
+      modified: 1788994528773
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528773
+    method: PUT
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "id": 1,
+          "nome": "Matemática"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/disciplinas/:id"
+    name: Atualiza parcialmente uma disciplina
+    meta:
+      id: req_e83f74fec82b4087b6431844fcb457d9
+      created: 1788994528774
+      modified: 1788994528774
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528774
+    method: PATCH
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/disciplinas/:id"
+    name: Exclui uma disciplina
+    meta:
+      id: req_cf822560334d4c05b219c781de57c902
+      created: 1788994528775
+      modified: 1788994528775
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528775
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/categorias"
+    name: Lista todas as categorias
+    meta:
+      id: req_259a2e2423634d28a538ac348c2e1c25
+      created: 1788994528776
+      modified: 1788994528776
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528776
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/disciplinas/:id/questoes"
+    name: Lista questões de uma disciplina
+    meta:
+      id: req_f50f880768ea4ea89f331c9cc3da949c
+      created: 1788994528776
+      modified: 1788994528776
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528776
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/categorias"
+    name: Cria uma categoria
+    meta:
+      id: req_85e052c3cbe74b8ca831995ce2c39fb1
+      created: 1788994528777
+      modified: 1788994528777
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528777
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "id": 1,
+          "nome": "Equação do 2º grau"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/categorias/:id"
+    name: Busca uma categoria por ID
+    meta:
+      id: req_f614c3f57c594e79b9cb0fae9538cffd
+      created: 1788994528778
+      modified: 1788994528778
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528778
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/categorias/:id"
+    name: Atualiza parcialmente uma disciplina
+    meta:
+      id: req_e643768cb4ab4fb0a5089b2594a91a02
+      created: 1788994528779
+      modified: 1788994528779
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528779
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "id": 1,
+          "nome": "Equação do 2º grau"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/categorias/:id"
+    name: Substitui uma categoria
+    meta:
+      id: req_f5bc5d520a234912a8a7e9cb9ee36534
+      created: 1788994528779
+      modified: 1788994528779
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528779
+    method: PUT
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "id": 1,
+          "nome": "Equação do 2º grau"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/categorias/:id"
+    name: Exclui uma categoria
+    meta:
+      id: req_68b48470d0e2483790ff79379f0df994
+      created: 1788994528780
+      modified: 1788994528780
+      isPrivate: false
+      description: ""
+      sortKey: -1788994528780
+    method: DELETE
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_23fe9b826e10f6d9d084503307f9ec832363b6b0
+    created: 1788994528981
+    modified: 1788994528981
+environments:
+  name: Base environment
+  meta:
+    id: env_73a0fb20d7e44adeb980741b103f895a
+    created: 1788994528760
+    modified: 1788994528760
+    isPrivate: false
+  data:
+    base_url: "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
+  subEnvironments:
+    - name: OpenAPI env localhost:3000
+      meta:
+        id: env_84b71603dcfd4070b5edc136c880e0ba
+        created: 1788994528761
+        modified: 1788994528761
+        isPrivate: false
+        sortKey: 1788994528761
+      data:
+        scheme: http
+        base_path: ""
+        host: localhost:3000
+spec:
+  contents:
+    openapi: 3.0.0
+    info:
+      title: API Banco de Questões
+      description: API REST para gerenciamento de questões de Matemática
+      version: 1.0.0
+    servers:
+      - url: http://localhost:3000
+    paths:
+      /questoes:
+        get:
+          summary: Lista questões com filtro, busca e paginação
+          parameters:
+            - name: dificuldade
+              in: query
+              required: false
+              schema:
+                type: string
+              example: facil
+            - name: busca
+              in: query
+              required: false
+              schema:
+                type: string
+              example: equação
+            - name: page
+              in: query
+              required: false
+              schema:
+                type: integer
+                default: 1
+              example: 1
+            - name: limit
+              in: query
+              required: false
+              schema:
+                type: integer
+                default: 10
+              example: 2
+          responses:
+            "200":
+              description: Lista de questões
+        post:
+          summary: Cria uma questão
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Questao"
+          responses:
+            "201":
+              description: Questão criada
+            "400":
+              description: Dados inválidos
+      /questoes/{id}:
+        get:
+          summary: Busca uma questão por ID
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          responses:
+            "200":
+              description: Questão encontrada
+            "404":
+              description: Questão não encontrada
+        put:
+          summary: Substitui uma questão
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Questao"
+          responses:
+            "200":
+              description: Questão atualizada
+            "400":
+              description: Dados inválidos
+            "404":
+              description: Questão não encontrada
+        patch:
+          summary: Atualiza parcialmente uma questão
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Questao"
+          responses:
+            "200":
+              description: Questão atualizada
+            "400":
+              description: Dados inválidos
+            "404":
+              description: Questão não encontrada
+        delete:
+          summary: Exclui uma questão
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          responses:
+            "204":
+              description: Questão excluída
+            "404":
+              description: Questão não encontrada
+      /disciplinas:
+        get:
+          summary: Lista todas as disciplinas
+          responses:
+            "200":
+              description: Lista de disciplinas
+        post:
+          summary: Cria uma disciplina
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Disciplina"
+          responses:
+            "201":
+              description: Disciplina criada
+            "400":
+              description: Nome obrigatório
+            "409":
+              description: Disciplina já cadastrada
+      /disciplinas/{id}:
+        get:
+          summary: Busca uma disciplina por ID
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          responses:
+            "200":
+              description: Disciplina encontrada
+            "404":
+              description: Disciplina não encontrada
+        put:
+          summary: Substitui uma disciplina
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Disciplina"
+          responses:
+            "200":
+              description: Disciplina atualizada
+            "400":
+              description: Nome obrigatório
+            "404":
+              description: Disciplina não encontrada
+        patch:
+          summary: Atualiza parcialmente uma disciplina
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                $ref: "#/components/schemas/Disciplina"
+          responses:
+            "200":
+              description: Disciplina atualizada
+            "404":
+              description: Disciplina não encontrada
+        delete:
+          summary: Exclui uma disciplina
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          responses:
+            "204":
+              description: Disciplina excluída
+            "404":
+              description: Disciplina não encontrada
+      /disciplinas/{id}/questoes:
+        get:
+          summary: Lista questões de uma disciplina
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          responses:
+            "200":
+              description: Questões da disciplina
+            "404":
+              description: Disciplina não encontrada
+      /categorias:
+        get:
+          summary: Lista todas as categorias
+          responses:
+            "200":
+              description: Lista de categorias
+        post:
+          summary: Cria uma categoria
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Categoria"
+          responses:
+            "201":
+              description: Categoria criada
+            "400":
+              description: Nome obrigatório
+            "409":
+              description: Categoria já cadastrada
+      /categorias/{id}:
+        get:
+          summary: Busca uma categoria por ID
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          responses:
+            "200":
+              description: Categoria encontrada
+            "404":
+              description: Categoria não encontrada
+        put:
+          summary: Substitui uma categoria
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Categoria"
+          responses:
+            "200":
+              description: Categoria atualizada
+            "400":
+              description: Nome obrigatório
+            "404":
+              description: Categoria não encontrada
+        patch:
+          summary: Atualiza parcialmente uma disciplina
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Categoria"
+          responses:
+            "200":
+              description: Categoria atualizada
+            "404":
+              description: Categoria não encontrada
+        delete:
+          summary: Exclui uma categoria
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          responses:
+            "204":
+              description: Categoria excluída
+            "404":
+              description: Categoria não encontrada
+    components:
+      schemas:
+        Questao:
+          type: object
+          required:
+            - enunciado
+            - disciplinaId
+            - categoriaId
+            - dificuldade
+          properties:
+            id:
+              type: integer
+              example: 1
+            enunciado:
+              type: string
+              example: Qual é o resultado de 2 + 3?
+            disciplinaId:
+              type: integer
+              example: 1
+            categoriaId:
+              type: integer
+              example: 1
+            dificuldade:
+              type: string
+              example: facil
+        Disciplina:
+          type: object
+          required:
+            - nome
+          properties:
+            id:
+              type: integer
+              example: 1
+            nome:
+              type: string
+              example: Matemática
+        Categoria:
+          type: object
+          required:
+            - nome
+          properties:
+            id:
+              type: integer
+              example: 1
+            nome:
+              type: string
+              example: Equação do 2º grau
+  meta:
+    id: spc_19774b6ae9444871a7e6d4f7e0e19fa0
+    created: 1788994528755
+    modified: 1788994528758
