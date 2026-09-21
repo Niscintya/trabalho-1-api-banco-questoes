@@ -1,13 +1,8 @@
-node_modules/
-.env
-
-# Logs
-*.log
-npm-debug.log*
-
-# Sistema operacional
-.DS_Store
-Thumbs.db
-
-# VS Code
-.vscode/
+@"
+DB_USERNAME=postgres
+DB_PASSWORD=nita3105
+DB_DATABASE=banco_questoes
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DIALECT=postgres
+"@ | Set-Content "$HOME\Documents\Trabalho-2-Entrega\.env.example"

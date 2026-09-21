@@ -1,9 +1,9 @@
-const repository = require('../repositories/assuntos.repository');
+const service = require('../services/assuntos.service');
 
 // GET /assuntos
 async function listarAssuntos(req, res, next) {
     try {
-        const assuntos = await repository.listarTodas();
+        const assuntos = await service.listarAssuntos();
 
         res.status(200).json(assuntos);
     } catch (erro) {
@@ -16,13 +16,7 @@ async function buscarAssuntoPorId(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        const assunto = await repository.buscarPorId(id);
-
-        if (!assunto) {
-            return res.status(404).json({
-                erro: 'Assunto não encontrado'
-            });
-        }
+        const assunto = await service.buscarAssuntoPorId(id);
 
         res.status(200).json(assunto);
     } catch (erro) {
@@ -33,15 +27,11 @@ async function buscarAssuntoPorId(req, res, next) {
 // POST /assuntos
 async function criarAssunto(req, res, next) {
     try {
-        if (!req.body || !req.body.nome) {
-            return res.status(400).json({
-                erro: 'O nome é obrigatório'
-            });
-        }
-
-        const novoAssunto = await repository.criar({
+        const dados = {
             nome: req.body.nome
-        });
+        };
+
+        const novoAssunto = await service.criarAssunto(dados);
 
         res.status(201).json(novoAssunto);
     } catch (erro) {
@@ -54,21 +44,14 @@ async function substituirAssunto(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        if (!req.body || !req.body.nome) {
-            return res.status(400).json({
-                erro: 'O nome é obrigatório'
-            });
-        }
-
-        const assunto = await repository.atualizar(id, {
+        const dados = {
             nome: req.body.nome
-        });
+        };
 
-        if (!assunto) {
-            return res.status(404).json({
-                erro: 'Assunto não encontrado'
-            });
-        }
+        const assunto = await service.atualizarAssunto(
+            id,
+            dados
+        );
 
         res.status(200).json(assunto);
     } catch (erro) {
@@ -87,13 +70,10 @@ async function atualizarAssunto(req, res, next) {
             dados.nome = req.body.nome;
         }
 
-        const assunto = await repository.atualizar(id, dados);
-
-        if (!assunto) {
-            return res.status(404).json({
-                erro: 'Assunto não encontrado'
-            });
-        }
+        const assunto = await service.atualizarAssunto(
+            id,
+            dados
+        );
 
         res.status(200).json(assunto);
     } catch (erro) {
@@ -106,13 +86,7 @@ async function excluirAssunto(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        const assunto = await repository.excluir(id);
-
-        if (!assunto) {
-            return res.status(404).json({
-                erro: 'Assunto não encontrado'
-            });
-        }
+        await service.excluirAssunto(id);
 
         res.status(204).send();
     } catch (erro) {

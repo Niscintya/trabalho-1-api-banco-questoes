@@ -1,9 +1,9 @@
-const repository = require('../repositories/questoes.repository');
+const service = require('../services/questoes.service');
 
 // GET /questoes
 async function listarQuestoes(req, res, next) {
     try {
-        const resultado = await repository.listarTodas({
+        const resultado = await service.listarQuestoes({
             dificuldade: req.query.dificuldade,
             busca: req.query.busca,
             page: req.query.page,
@@ -31,13 +31,7 @@ async function buscarQuestaoPorId(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        const questao = await repository.buscarPorId(id);
-
-        if (!questao) {
-            return res.status(404).json({
-                erro: 'Questão não encontrada'
-            });
-        }
+        const questao = await service.buscarQuestaoPorId(id);
 
         res.status(200).json(questao);
     } catch (erro) {
@@ -48,12 +42,6 @@ async function buscarQuestaoPorId(req, res, next) {
 // POST /questoes
 async function criarQuestao(req, res, next) {
     try {
-        if (!req.body || !req.body.enunciado) {
-            return res.status(400).json({
-                erro: 'O enunciado é obrigatório'
-            });
-        }
-
         const dados = {
             enunciado: req.body.enunciado,
             disciplinaId: req.body.disciplinaId,
@@ -65,7 +53,7 @@ async function criarQuestao(req, res, next) {
             ? req.body.assuntoIds
             : [];
 
-        const novaQuestao = await repository.criarComAssuntos(
+        const novaQuestao = await service.criarQuestao(
             dados,
             assuntoIds
         );
@@ -81,12 +69,6 @@ async function substituirQuestao(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        if (!req.body || !req.body.enunciado) {
-            return res.status(400).json({
-                erro: 'O enunciado é obrigatório'
-            });
-        }
-
         const dados = {
             enunciado: req.body.enunciado,
             disciplinaId: req.body.disciplinaId,
@@ -98,17 +80,11 @@ async function substituirQuestao(req, res, next) {
             ? req.body.assuntoIds
             : [];
 
-        const questao = await repository.atualizarComAssuntos(
+        const questao = await service.substituirQuestao(
             id,
             dados,
             assuntoIds
         );
-
-        if (!questao) {
-            return res.status(404).json({
-                erro: 'Questão não encontrada'
-            });
-        }
 
         res.status(200).json(questao);
     } catch (erro) {
@@ -144,17 +120,11 @@ async function atualizarQuestao(req, res, next) {
                 ? req.body.assuntoIds
                 : undefined;
 
-        const questao = await repository.atualizarComAssuntos(
+        const questao = await service.atualizarQuestao(
             id,
             dados,
             assuntoIds
         );
-
-        if (!questao) {
-            return res.status(404).json({
-                erro: 'Questão não encontrada'
-            });
-        }
 
         res.status(200).json(questao);
     } catch (erro) {
@@ -167,13 +137,7 @@ async function excluirQuestao(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        const questao = await repository.excluir(id);
-
-        if (!questao) {
-            return res.status(404).json({
-                erro: 'Questão não encontrada'
-            });
-        }
+        await service.excluirQuestao(id);
 
         res.status(204).send();
     } catch (erro) {

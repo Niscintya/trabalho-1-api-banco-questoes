@@ -1,3 +1,4 @@
+@"
 const path = require('path');
 
 module.exports = {
@@ -6,3 +7,4 @@ module.exports = {
     'seeders-path': path.resolve('seeders'),
     'migrations-path': path.resolve('migrations')
 };
+"@ | Set-Content "$HOME\Documents\Trabalho-2-Entrega\.sequelizerc"

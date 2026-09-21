@@ -1,9 +1,9 @@
-const repository = require('../repositories/categorias.repository');
+const service = require('../services/categorias.service');
 
 // GET /categorias
 async function listarCategorias(req, res, next) {
     try {
-        const categorias = await repository.listarTodas();
+        const categorias = await service.listarCategorias();
 
         res.status(200).json(categorias);
     } catch (erro) {
@@ -16,13 +16,7 @@ async function buscarCategoriaPorId(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        const categoria = await repository.buscarPorId(id);
-
-        if (!categoria) {
-            return res.status(404).json({
-                erro: 'Categoria não encontrada'
-            });
-        }
+        const categoria = await service.buscarCategoriaPorId(id);
 
         res.status(200).json(categoria);
     } catch (erro) {
@@ -33,15 +27,11 @@ async function buscarCategoriaPorId(req, res, next) {
 // POST /categorias
 async function criarCategoria(req, res, next) {
     try {
-        if (!req.body || !req.body.nome) {
-            return res.status(400).json({
-                erro: 'O nome é obrigatório'
-            });
-        }
-
-        const novaCategoria = await repository.criar({
+        const dados = {
             nome: req.body.nome
-        });
+        };
+
+        const novaCategoria = await service.criarCategoria(dados);
 
         res.status(201).json(novaCategoria);
     } catch (erro) {
@@ -54,21 +44,14 @@ async function substituirCategoria(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        if (!req.body || !req.body.nome) {
-            return res.status(400).json({
-                erro: 'O nome é obrigatório'
-            });
-        }
-
-        const categoria = await repository.atualizar(id, {
+        const dados = {
             nome: req.body.nome
-        });
+        };
 
-        if (!categoria) {
-            return res.status(404).json({
-                erro: 'Categoria não encontrada'
-            });
-        }
+        const categoria = await service.atualizarCategoria(
+            id,
+            dados
+        );
 
         res.status(200).json(categoria);
     } catch (erro) {
@@ -87,13 +70,10 @@ async function atualizarCategoria(req, res, next) {
             dados.nome = req.body.nome;
         }
 
-        const categoria = await repository.atualizar(id, dados);
-
-        if (!categoria) {
-            return res.status(404).json({
-                erro: 'Categoria não encontrada'
-            });
-        }
+        const categoria = await service.atualizarCategoria(
+            id,
+            dados
+        );
 
         res.status(200).json(categoria);
     } catch (erro) {
@@ -106,13 +86,7 @@ async function excluirCategoria(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        const categoria = await repository.excluir(id);
-
-        if (!categoria) {
-            return res.status(404).json({
-                erro: 'Categoria não encontrada'
-            });
-        }
+        await service.excluirCategoria(id);
 
         res.status(204).send();
     } catch (erro) {

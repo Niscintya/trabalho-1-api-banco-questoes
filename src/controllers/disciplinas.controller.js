@@ -1,9 +1,9 @@
-const repository = require('../repositories/disciplinas.repository');
+const service = require('../services/disciplinas.service');
 
 // GET /disciplinas
 async function listarDisciplinas(req, res, next) {
     try {
-        const disciplinas = await repository.listarTodas();
+        const disciplinas = await service.listarDisciplinas();
 
         res.status(200).json(disciplinas);
     } catch (erro) {
@@ -16,13 +16,7 @@ async function buscarDisciplinaPorId(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        const disciplina = await repository.buscarPorId(id);
-
-        if (!disciplina) {
-            return res.status(404).json({
-                erro: 'Disciplina não encontrada'
-            });
-        }
+        const disciplina = await service.buscarDisciplinaPorId(id);
 
         res.status(200).json(disciplina);
     } catch (erro) {
@@ -33,15 +27,11 @@ async function buscarDisciplinaPorId(req, res, next) {
 // POST /disciplinas
 async function criarDisciplina(req, res, next) {
     try {
-        if (!req.body || !req.body.nome) {
-            return res.status(400).json({
-                erro: 'O nome é obrigatório'
-            });
-        }
-
-        const novaDisciplina = await repository.criar({
+        const dados = {
             nome: req.body.nome
-        });
+        };
+
+        const novaDisciplina = await service.criarDisciplina(dados);
 
         res.status(201).json(novaDisciplina);
     } catch (erro) {
@@ -54,21 +44,14 @@ async function substituirDisciplina(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        if (!req.body || !req.body.nome) {
-            return res.status(400).json({
-                erro: 'O nome é obrigatório'
-            });
-        }
-
-        const disciplina = await repository.atualizar(id, {
+        const dados = {
             nome: req.body.nome
-        });
+        };
 
-        if (!disciplina) {
-            return res.status(404).json({
-                erro: 'Disciplina não encontrada'
-            });
-        }
+        const disciplina = await service.atualizarDisciplina(
+            id,
+            dados
+        );
 
         res.status(200).json(disciplina);
     } catch (erro) {
@@ -87,13 +70,10 @@ async function atualizarDisciplina(req, res, next) {
             dados.nome = req.body.nome;
         }
 
-        const disciplina = await repository.atualizar(id, dados);
-
-        if (!disciplina) {
-            return res.status(404).json({
-                erro: 'Disciplina não encontrada'
-            });
-        }
+        const disciplina = await service.atualizarDisciplina(
+            id,
+            dados
+        );
 
         res.status(200).json(disciplina);
     } catch (erro) {
@@ -106,13 +86,7 @@ async function excluirDisciplina(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        const disciplina = await repository.excluir(id);
-
-        if (!disciplina) {
-            return res.status(404).json({
-                erro: 'Disciplina não encontrada'
-            });
-        }
+        await service.excluirDisciplina(id);
 
         res.status(204).send();
     } catch (erro) {
@@ -125,15 +99,8 @@ async function listarQuestoesDaDisciplina(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        const disciplina = await repository.buscarPorId(id);
-
-        if (!disciplina) {
-            return res.status(404).json({
-                erro: 'Disciplina não encontrada'
-            });
-        }
-
-        const questoes = await repository.listarQuestoes(id);
+        const questoes =
+            await service.listarQuestoesDaDisciplina(id);
 
         res.status(200).json(questoes);
     } catch (erro) {
