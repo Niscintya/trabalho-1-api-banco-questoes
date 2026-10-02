@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-    async up(queryInterface, Sequelize) {
+    async up(queryInterface, _Sequelize) {
 
         // Tabela disciplinas
         await queryInterface.renameColumn(
@@ -69,7 +69,7 @@ module.exports = {
         );
     },
 
-    async down(queryInterface, Sequelize) {
+    async down(queryInterface, _Sequelize) {
 
         await queryInterface.renameColumn(
             'disciplinas',

@@ -1,78 +1,75 @@
-const repository = require('../repositories/disciplinas.repository');
+function criarDisciplinasService(repository) {
 
-// Lista todas as disciplinas
-async function listarDisciplinas() {
-    return await repository.listarTodas();
-}
-
-// Busca uma disciplina pelo ID
-async function buscarDisciplinaPorId(id) {
-    const disciplina = await repository.buscarPorId(id);
-
-    if (!disciplina) {
-        const erro = new Error('Disciplina não encontrada');
-        erro.statusCode = 404;
-        throw erro;
+    async function listarDisciplinas() {
+        return await repository.listarTodas();
     }
 
-    return disciplina;
-}
+    async function buscarDisciplinaPorId(id) {
+        const disciplina = await repository.buscarPorId(id);
 
-// Cria uma disciplina
-async function criarDisciplina(dados) {
-    if (!dados.nome) {
-        const erro = new Error('O nome é obrigatório');
-        erro.statusCode = 400;
-        throw erro;
+        if (!disciplina) {
+            const erro = new Error('Disciplina não encontrada');
+            erro.statusCode = 404;
+            throw erro;
+        }
+
+        return disciplina;
     }
 
-    return await repository.criar(dados);
-}
+    async function criarDisciplina(dados) {
+        if (!dados.nome) {
+            const erro = new Error('O nome é obrigatório');
+            erro.statusCode = 400;
+            throw erro;
+        }
 
-// Atualiza uma disciplina
-async function atualizarDisciplina(id, dados) {
-    const disciplina = await repository.atualizar(id, dados);
-
-    if (!disciplina) {
-        const erro = new Error('Disciplina não encontrada');
-        erro.statusCode = 404;
-        throw erro;
+        return await repository.criar(dados);
     }
 
-    return disciplina;
-}
+    async function atualizarDisciplina(id, dados) {
+        const disciplina = await repository.atualizar(id, dados);
 
-// Exclui uma disciplina
-async function excluirDisciplina(id) {
-    const disciplina = await repository.excluir(id);
+        if (!disciplina) {
+            const erro = new Error('Disciplina não encontrada');
+            erro.statusCode = 404;
+            throw erro;
+        }
 
-    if (!disciplina) {
-        const erro = new Error('Disciplina não encontrada');
-        erro.statusCode = 404;
-        throw erro;
+        return disciplina;
     }
 
-    return disciplina;
-}
+    async function excluirDisciplina(id) {
+        const disciplina = await repository.excluir(id);
 
-// Lista as questões pertencentes a uma disciplina
-async function listarQuestoesDaDisciplina(id) {
-    const disciplina = await repository.buscarPorId(id);
+        if (!disciplina) {
+            const erro = new Error('Disciplina não encontrada');
+            erro.statusCode = 404;
+            throw erro;
+        }
 
-    if (!disciplina) {
-        const erro = new Error('Disciplina não encontrada');
-        erro.statusCode = 404;
-        throw erro;
+        return disciplina;
     }
 
-    return await repository.listarQuestoes(id);
+    async function listarQuestoesDaDisciplina(id) {
+        const disciplina = await repository.buscarPorId(id);
+
+        if (!disciplina) {
+            const erro = new Error('Disciplina não encontrada');
+            erro.statusCode = 404;
+            throw erro;
+        }
+
+        return await repository.listarQuestoes(id);
+    }
+
+    return {
+        listarDisciplinas,
+        buscarDisciplinaPorId,
+        criarDisciplina,
+        atualizarDisciplina,
+        excluirDisciplina,
+        listarQuestoesDaDisciplina
+    };
 }
 
-module.exports = {
-    listarDisciplinas,
-    buscarDisciplinaPorId,
-    criarDisciplina,
-    atualizarDisciplina,
-    excluirDisciplina,
-    listarQuestoesDaDisciplina
-};
+module.exports = criarDisciplinasService;

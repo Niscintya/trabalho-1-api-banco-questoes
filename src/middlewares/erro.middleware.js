@@ -1,4 +1,4 @@
-function erroMiddleware(err, req, res, next) {
+function erroMiddleware(err, req, res, _next) {
     console.error(err);
 
     // Violação de integridade referencial no PostgreSQL

@@ -1,64 +1,62 @@
-const repository = require('../repositories/assuntos.repository');
+function criarAssuntosService(repository) {
 
-// Lista todos os assuntos
-async function listarAssuntos() {
-    return await repository.listarTodas();
-}
-
-// Busca um assunto pelo ID
-async function buscarAssuntoPorId(id) {
-    const assunto = await repository.buscarPorId(id);
-
-    if (!assunto) {
-        const erro = new Error('Assunto não encontrado');
-        erro.statusCode = 404;
-        throw erro;
+    async function listarAssuntos() {
+        return await repository.listarTodas();
     }
 
-    return assunto;
-}
+    async function buscarAssuntoPorId(id) {
+        const assunto = await repository.buscarPorId(id);
 
-// Cria um assunto
-async function criarAssunto(dados) {
-    if (!dados.nome) {
-        const erro = new Error('O nome é obrigatório');
-        erro.statusCode = 400;
-        throw erro;
+        if (!assunto) {
+            const erro = new Error('Assunto não encontrado');
+            erro.statusCode = 404;
+            throw erro;
+        }
+
+        return assunto;
     }
 
-    return await repository.criar(dados);
-}
+    async function criarAssunto(dados) {
+        if (!dados.nome) {
+            const erro = new Error('O nome é obrigatório');
+            erro.statusCode = 400;
+            throw erro;
+        }
 
-// Atualiza um assunto
-async function atualizarAssunto(id, dados) {
-    const assunto = await repository.atualizar(id, dados);
-
-    if (!assunto) {
-        const erro = new Error('Assunto não encontrado');
-        erro.statusCode = 404;
-        throw erro;
+        return await repository.criar(dados);
     }
 
-    return assunto;
-}
+    async function atualizarAssunto(id, dados) {
+        const assunto = await repository.atualizar(id, dados);
 
-// Exclui um assunto
-async function excluirAssunto(id) {
-    const assunto = await repository.excluir(id);
+        if (!assunto) {
+            const erro = new Error('Assunto não encontrado');
+            erro.statusCode = 404;
+            throw erro;
+        }
 
-    if (!assunto) {
-        const erro = new Error('Assunto não encontrado');
-        erro.statusCode = 404;
-        throw erro;
+        return assunto;
     }
 
-    return assunto;
+    async function excluirAssunto(id) {
+        const assunto = await repository.excluir(id);
+
+        if (!assunto) {
+            const erro = new Error('Assunto não encontrado');
+            erro.statusCode = 404;
+            throw erro;
+        }
+
+        return assunto;
+    }
+
+    return {
+        listarAssuntos,
+        buscarAssuntoPorId,
+        criarAssunto,
+        atualizarAssunto,
+        excluirAssunto
+    };
 }
 
-module.exports = {
-    listarAssuntos,
-    buscarAssuntoPorId,
-    criarAssunto,
-    atualizarAssunto,
-    excluirAssunto
-};
+module.exports = criarAssuntosService;

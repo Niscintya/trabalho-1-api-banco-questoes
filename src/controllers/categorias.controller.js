@@ -1,4 +1,4 @@
-const service = require('../services/categorias.service');
+const { categoriasService: service } = require('../config/container');
 
 // GET /categorias
 async function listarCategorias(req, res, next) {

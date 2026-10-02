@@ -1,64 +1,62 @@
-const repository = require('../repositories/categorias.repository');
+function criarCategoriasService(repository) {
 
-// Lista todas as categorias
-async function listarCategorias() {
-    return await repository.listarTodas();
-}
-
-// Busca uma categoria pelo ID
-async function buscarCategoriaPorId(id) {
-    const categoria = await repository.buscarPorId(id);
-
-    if (!categoria) {
-        const erro = new Error('Categoria não encontrada');
-        erro.statusCode = 404;
-        throw erro;
+    async function listarCategorias() {
+        return await repository.listarTodas();
     }
 
-    return categoria;
-}
+    async function buscarCategoriaPorId(id) {
+        const categoria = await repository.buscarPorId(id);
 
-// Cria uma categoria
-async function criarCategoria(dados) {
-    if (!dados.nome) {
-        const erro = new Error('O nome é obrigatório');
-        erro.statusCode = 400;
-        throw erro;
+        if (!categoria) {
+            const erro = new Error('Categoria não encontrada');
+            erro.statusCode = 404;
+            throw erro;
+        }
+
+        return categoria;
     }
 
-    return await repository.criar(dados);
-}
+    async function criarCategoria(dados) {
+        if (!dados.nome) {
+            const erro = new Error('O nome é obrigatório');
+            erro.statusCode = 400;
+            throw erro;
+        }
 
-// Atualiza uma categoria
-async function atualizarCategoria(id, dados) {
-    const categoria = await repository.atualizar(id, dados);
-
-    if (!categoria) {
-        const erro = new Error('Categoria não encontrada');
-        erro.statusCode = 404;
-        throw erro;
+        return await repository.criar(dados);
     }
 
-    return categoria;
-}
+    async function atualizarCategoria(id, dados) {
+        const categoria = await repository.atualizar(id, dados);
 
-// Exclui uma categoria
-async function excluirCategoria(id) {
-    const categoria = await repository.excluir(id);
+        if (!categoria) {
+            const erro = new Error('Categoria não encontrada');
+            erro.statusCode = 404;
+            throw erro;
+        }
 
-    if (!categoria) {
-        const erro = new Error('Categoria não encontrada');
-        erro.statusCode = 404;
-        throw erro;
+        return categoria;
     }
 
-    return categoria;
+    async function excluirCategoria(id) {
+        const categoria = await repository.excluir(id);
+
+        if (!categoria) {
+            const erro = new Error('Categoria não encontrada');
+            erro.statusCode = 404;
+            throw erro;
+        }
+
+        return categoria;
+    }
+
+    return {
+        listarCategorias,
+        buscarCategoriaPorId,
+        criarCategoria,
+        atualizarCategoria,
+        excluirCategoria
+    };
 }
 
-module.exports = {
-    listarCategorias,
-    buscarCategoriaPorId,
-    criarCategoria,
-    atualizarCategoria,
-    excluirCategoria
-};
+module.exports = criarCategoriasService;

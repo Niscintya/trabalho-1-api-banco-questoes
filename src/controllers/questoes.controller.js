@@ -1,4 +1,9 @@
-const service = require('../services/questoes.service');
+const { questoesService: service } = require('../config/container');
+
+const {
+    criarQuestaoDTO,
+    atualizarQuestaoDTO
+} = require('../dtos/questao.dto');
 
 // GET /questoes
 async function listarQuestoes(req, res, next) {
@@ -42,16 +47,10 @@ async function buscarQuestaoPorId(req, res, next) {
 // POST /questoes
 async function criarQuestao(req, res, next) {
     try {
-        const dados = {
-            enunciado: req.body.enunciado,
-            disciplinaId: req.body.disciplinaId,
-            categoriaId: req.body.categoriaId,
-            dificuldade: req.body.dificuldade
-        };
-
-        const assuntoIds = Array.isArray(req.body.assuntoIds)
-            ? req.body.assuntoIds
-            : [];
+        const {
+            dados,
+            assuntoIds
+        } = criarQuestaoDTO(req.body);
 
         const novaQuestao = await service.criarQuestao(
             dados,
@@ -69,16 +68,10 @@ async function substituirQuestao(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        const dados = {
-            enunciado: req.body.enunciado,
-            disciplinaId: req.body.disciplinaId,
-            categoriaId: req.body.categoriaId,
-            dificuldade: req.body.dificuldade
-        };
-
-        const assuntoIds = Array.isArray(req.body.assuntoIds)
-            ? req.body.assuntoIds
-            : [];
+        const {
+            dados,
+            assuntoIds
+        } = criarQuestaoDTO(req.body);
 
         const questao = await service.substituirQuestao(
             id,
@@ -97,28 +90,10 @@ async function atualizarQuestao(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        const dados = {};
-
-        if (req.body.enunciado !== undefined) {
-            dados.enunciado = req.body.enunciado;
-        }
-
-        if (req.body.dificuldade !== undefined) {
-            dados.dificuldade = req.body.dificuldade;
-        }
-
-        if (req.body.disciplinaId !== undefined) {
-            dados.disciplinaId = req.body.disciplinaId;
-        }
-
-        if (req.body.categoriaId !== undefined) {
-            dados.categoriaId = req.body.categoriaId;
-        }
-
-        const assuntoIds =
-            req.body.assuntoIds !== undefined
-                ? req.body.assuntoIds
-                : undefined;
+        const {
+            dados,
+            assuntoIds
+        } = atualizarQuestaoDTO(req.body);
 
         const questao = await service.atualizarQuestao(
             id,

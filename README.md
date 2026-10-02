@@ -453,3 +453,11 @@ O projeto utiliza separação de responsabilidades:
 - **Seeders:** inserem os dados iniciais.
 
 Dessa forma, os controllers não realizam consultas diretamente no banco de dados, mantendo o acesso aos dados concentrado nos repositories.
+## Trabalho 3 - Refatoração Arquitetural
+
+Nesta etapa, a API foi refatorada para utilizar arquitetura em camadas e conceitos de MVC, mantendo o mesmo comportamento externo das versões anteriores.
+
+O fluxo principal da aplicação passou a ser:
+
+```text
+Route → Controller → Service → Repository → Banco de Dados

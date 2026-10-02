@@ -1,95 +1,92 @@
-const repository = require('../repositories/questoes.repository');
+function criarQuestoesService(repository) {
 
-// Lista as questões com filtros, paginação e ordenação
-async function listarQuestoes(filtros) {
-    return await repository.listarTodas(filtros);
-}
-
-// Busca uma questão pelo ID
-async function buscarQuestaoPorId(id) {
-    const questao = await repository.buscarPorId(id);
-
-    if (!questao) {
-        const erro = new Error('Questão não encontrada');
-        erro.statusCode = 404;
-        throw erro;
+    async function listarQuestoes(filtros) {
+        return await repository.listarTodas(filtros);
     }
 
-    return questao;
-}
+    async function buscarQuestaoPorId(id) {
+        const questao = await repository.buscarPorId(id);
 
-// Cria uma nova questão
-async function criarQuestao(dados, assuntoIds = []) {
-    if (!dados.enunciado) {
-        const erro = new Error('O enunciado é obrigatório');
-        erro.statusCode = 400;
-        throw erro;
+        if (!questao) {
+            const erro = new Error('Questão não encontrada');
+            erro.statusCode = 404;
+            throw erro;
+        }
+
+        return questao;
     }
 
-    return await repository.criarComAssuntos(
-        dados,
-        assuntoIds
-    );
-}
+    async function criarQuestao(dados, assuntoIds = []) {
+        if (!dados.enunciado) {
+            const erro = new Error('O enunciado é obrigatório');
+            erro.statusCode = 400;
+            throw erro;
+        }
 
-// Substitui completamente uma questão
-async function substituirQuestao(id, dados, assuntoIds = []) {
-    if (!dados.enunciado) {
-        const erro = new Error('O enunciado é obrigatório');
-        erro.statusCode = 400;
-        throw erro;
+        return await repository.criarComAssuntos(
+            dados,
+            assuntoIds
+        );
     }
 
-    const questao = await repository.atualizarComAssuntos(
-        id,
-        dados,
-        assuntoIds
-    );
+    async function substituirQuestao(id, dados, assuntoIds = []) {
+        if (!dados.enunciado) {
+            const erro = new Error('O enunciado é obrigatório');
+            erro.statusCode = 400;
+            throw erro;
+        }
 
-    if (!questao) {
-        const erro = new Error('Questão não encontrada');
-        erro.statusCode = 404;
-        throw erro;
+        const questao = await repository.atualizarComAssuntos(
+            id,
+            dados,
+            assuntoIds
+        );
+
+        if (!questao) {
+            const erro = new Error('Questão não encontrada');
+            erro.statusCode = 404;
+            throw erro;
+        }
+
+        return questao;
     }
 
-    return questao;
-}
+    async function atualizarQuestao(id, dados, assuntoIds) {
+        const questao = await repository.atualizarComAssuntos(
+            id,
+            dados,
+            assuntoIds
+        );
 
-// Atualiza parcialmente uma questão
-async function atualizarQuestao(id, dados, assuntoIds) {
-    const questao = await repository.atualizarComAssuntos(
-        id,
-        dados,
-        assuntoIds
-    );
+        if (!questao) {
+            const erro = new Error('Questão não encontrada');
+            erro.statusCode = 404;
+            throw erro;
+        }
 
-    if (!questao) {
-        const erro = new Error('Questão não encontrada');
-        erro.statusCode = 404;
-        throw erro;
+        return questao;
     }
 
-    return questao;
-}
+    async function excluirQuestao(id) {
+        const questao = await repository.excluir(id);
 
-// Exclui uma questão
-async function excluirQuestao(id) {
-    const questao = await repository.excluir(id);
+        if (!questao) {
+            const erro = new Error('Questão não encontrada');
+            erro.statusCode = 404;
+            throw erro;
+        }
 
-    if (!questao) {
-        const erro = new Error('Questão não encontrada');
-        erro.statusCode = 404;
-        throw erro;
+        return questao;
     }
 
-    return questao;
+    return {
+        listarQuestoes,
+        buscarQuestaoPorId,
+        criarQuestao,
+        substituirQuestao,
+        atualizarQuestao,
+        excluirQuestao
+    };
 }
 
-module.exports = {
-    listarQuestoes,
-    buscarQuestaoPorId,
-    criarQuestao,
-    substituirQuestao,
-    atualizarQuestao,
-    excluirQuestao
-};
+module.exports = criarQuestoesService;

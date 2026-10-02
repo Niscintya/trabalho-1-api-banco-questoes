@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  async up(queryInterface, _Sequelize) {
     const agora = new Date();
 
     // 10 disciplinas
@@ -145,7 +145,7 @@ module.exports = {
     ]);
   },
 
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface, _Sequelize) {
     await queryInterface.bulkDelete('questao_assuntos', null, {});
     await queryInterface.bulkDelete('questoes', null, {});
     await queryInterface.bulkDelete('assuntos', null, {});
