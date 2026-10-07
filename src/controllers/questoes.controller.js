@@ -57,6 +57,22 @@ async function criarQuestao(req, res, next) {
             assuntoIds
         );
 
+        const io = req.app.get('io');
+
+        const nomeSala =
+            `disciplina:${novaQuestao.disciplinaId}`;
+
+        io.to(nomeSala).emit(
+            'questao_criada',
+            {
+                id: novaQuestao.id,
+                enunciado: novaQuestao.enunciado,
+                disciplinaId: novaQuestao.disciplinaId,
+                categoriaId: novaQuestao.categoriaId,
+                dificuldade: novaQuestao.dificuldade
+            }
+        );
+
         res.status(201).json(novaQuestao);
     } catch (erro) {
         next(erro);
@@ -77,6 +93,22 @@ async function substituirQuestao(req, res, next) {
             id,
             dados,
             assuntoIds
+        );
+
+        const io = req.app.get('io');
+
+        const nomeSala =
+            `disciplina:${questao.disciplinaId}`;
+
+        io.to(nomeSala).emit(
+            'questao_atualizada',
+            {
+                id: questao.id,
+                enunciado: questao.enunciado,
+                disciplinaId: questao.disciplinaId,
+                categoriaId: questao.categoriaId,
+                dificuldade: questao.dificuldade
+            }
         );
 
         res.status(200).json(questao);
@@ -101,6 +133,22 @@ async function atualizarQuestao(req, res, next) {
             assuntoIds
         );
 
+        const io = req.app.get('io');
+
+        const nomeSala =
+            `disciplina:${questao.disciplinaId}`;
+
+        io.to(nomeSala).emit(
+            'questao_atualizada',
+            {
+                id: questao.id,
+                enunciado: questao.enunciado,
+                disciplinaId: questao.disciplinaId,
+                categoriaId: questao.categoriaId,
+                dificuldade: questao.dificuldade
+            }
+        );
+
         res.status(200).json(questao);
     } catch (erro) {
         next(erro);
@@ -112,7 +160,21 @@ async function excluirQuestao(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        await service.excluirQuestao(id);
+        const questao =
+            await service.excluirQuestao(id);
+
+        const io = req.app.get('io');
+
+        const nomeSala =
+            `disciplina:${questao.disciplinaId}`;
+
+        io.to(nomeSala).emit(
+            'questao_excluida',
+            {
+                id: questao.id,
+                disciplinaId: questao.disciplinaId
+            }
+        );
 
         res.status(204).send();
     } catch (erro) {

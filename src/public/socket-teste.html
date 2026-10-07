@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Teste WebSocket - Banco de Questões</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .status {
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .formulario {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        input,
+        button {
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        input {
+            min-width: 180px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .bloco {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 6px;
+        }
+
+        #eventos {
+            background: #111;
+            color: #fff;
+            padding: 15px;
+            min-height: 200px;
+            max-height: 350px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Teste de Comunicação em Tempo Real</h1>
+
+    <p>
+        Sistema de Acompanhamento de Questões
+    </p>
+
+    <div class="status">
+        Conexão:
+        <span id="statusConexao">desconectado</span>
+    </div>
+
+    <div class="formulario">
+
+        <input
+            type="text"
+            id="nome"
+            placeholder="Nome do participante"
+        >
+
+        <input
+            type="number"
+            id="disciplinaId"
+            placeholder="ID da disciplina"
+            min="1"
+        >
+
+        <button id="btnEntrar">
+            Entrar na sala
+        </button>
+
+        <button id="btnSair">
+            Sair da sala
+        </button>
+
+    </div>
+
+    <div class="bloco">
+
+        <h2>Sala atual</h2>
+
+        <p id="salaAtual">
+            Nenhuma sala
+        </p>
+
+    </div>
+
+    <div class="bloco">
+
+        <h2>Participantes conectados</h2>
+
+        <ul id="participantes"></ul>
+
+    </div>
+
+    <div class="bloco">
+
+        <h2>Eventos recebidos</h2>
+
+        <div id="eventos"></div>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+        const socket = io();
+
+        const statusConexao =
+            document.getElementById('statusConexao');
+
+        const nomeInput =
+            document.getElementById('nome');
+
+        const disciplinaInput =
+            document.getElementById('disciplinaId');
+
+        const salaAtual =
+            document.getElementById('salaAtual');
+
+        const participantesLista =
+            document.getElementById('participantes');
+
+        const eventos =
+            document.getElementById('eventos');
+
+        const btnEntrar =
+            document.getElementById('btnEntrar');
+
+        const btnSair =
+            document.getElementById('btnSair');
+
+        let dadosSalaAtual = null;
+
+        function registrarEvento(nome, dados) {
+
+            const horario =
+                new Date().toLocaleTimeString();
+
+            const texto =
+                `[${horario}] ${nome}\n` +
+                `${JSON.stringify(dados, null, 2)}\n\n`;
+
+            eventos.textContent =
+                texto + eventos.textContent;
+        }
+
+        socket.on('connect', () => {
+
+            statusConexao.textContent =
+                'conectado';
+
+            registrarEvento(
+                'connect',
+                {
+                    socketId: socket.id
+                }
+            );
+
+            if (dadosSalaAtual) {
+                socket.emit(
+                    'entrar_sala',
+                    dadosSalaAtual
+                );
+            }
+        });
+
+        socket.on('disconnect', (motivo) => {
+
+            statusConexao.textContent =
+                'desconectado';
+
+            registrarEvento(
+                'disconnect',
+                {
+                    motivo
+                }
+            );
+        });
+
+        btnEntrar.addEventListener(
+            'click',
+            () => {
+
+                const nome =
+                    nomeInput.value.trim();
+
+                const disciplinaId =
+                    Number(disciplinaInput.value);
+
+                if (!nome) {
+
+                    alert(
+                        'Informe o nome do participante.'
+                    );
+
+                    return;
+                }
+
+                if (
+                    !disciplinaId ||
+                    disciplinaId <= 0
+                ) {
+
+                    alert(
+                        'Informe um ID de disciplina válido.'
+                    );
+
+                    return;
+                }
+
+                dadosSalaAtual = {
+                    nome,
+                    disciplinaId
+                };
+
+                socket.emit(
+                    'entrar_sala',
+                    dadosSalaAtual
+                );
+
+                registrarEvento(
+                    'entrar_sala enviado',
+                    dadosSalaAtual
+                );
+            }
+        );
+
+        btnSair.addEventListener(
+            'click',
+            () => {
+
+                socket.emit('sair_sala');
+
+                registrarEvento(
+                    'sair_sala enviado',
+                    {}
+                );
+
+                dadosSalaAtual = null;
+            }
+        );
+
+        socket.on(
+            'sala_entrada_confirmada',
+            (dados) => {
+
+                salaAtual.textContent =
+                    dados.sala;
+
+                registrarEvento(
+                    'sala_entrada_confirmada',
+                    dados
+                );
+            }
+        );
+
+        socket.on(
+            'sala_saida_confirmada',
+            (dados) => {
+
+                salaAtual.textContent =
+                    'Nenhuma sala';
+
+                participantesLista.innerHTML =
+                    '';
+
+                registrarEvento(
+                    'sala_saida_confirmada',
+                    dados
+                );
+            }
+        );
+
+        socket.on(
+            'participantes_atualizados',
+            (participantes) => {
+
+                participantesLista.innerHTML =
+                    '';
+
+                participantes.forEach(
+                    participante => {
+
+                        const item =
+                            document.createElement('li');
+
+                        item.textContent =
+                            participante.nome;
+
+                        participantesLista.appendChild(
+                            item
+                        );
+                    }
+                );
+
+                registrarEvento(
+                    'participantes_atualizados',
+                    participantes
+                );
+            }
+        );
+
+        socket.on(
+            'questao_criada',
+            (questao) => {
+
+                registrarEvento(
+                    'questao_criada',
+                    questao
+                );
+
+                alert(
+                    `Nova questão criada: ${questao.enunciado}`
+                );
+            }
+        );
+
+        socket.on(
+            'questao_atualizada',
+            (questao) => {
+
+                registrarEvento(
+                    'questao_atualizada',
+                    questao
+                );
+
+                alert(
+                    `Questão ${questao.id} foi atualizada.`
+                );
+            }
+        );
+
+        socket.on(
+            'questao_excluida',
+            (dados) => {
+
+                registrarEvento(
+                    'questao_excluida',
+                    dados
+                );
+
+                alert(
+                    `Questão ${dados.id} foi excluída.`
+                );
+            }
+        );
+
+        socket.on(
+            'erro_socket',
+            (dados) => {
+
+                registrarEvento(
+                    'erro_socket',
+                    dados
+                );
+
+                alert(dados.erro);
+            }
+        );
+
+    </script>
+
+</body>
+</html>
