@@ -1,4 +1,7 @@
-const { questoesService: service } = require('../config/container');
+const {
+    questoesService: service,
+    notificacoesService
+} = require('../config/container');
 
 const {
     criarQuestaoDTO,
@@ -10,6 +13,7 @@ async function listarQuestoes(req, res, next) {
     try {
         const resultado = await service.listarQuestoes({
             dificuldade: req.query.dificuldade,
+            status: req.query.status,
             busca: req.query.busca,
             page: req.query.page,
             limit: req.query.limit,
@@ -36,7 +40,8 @@ async function buscarQuestaoPorId(req, res, next) {
     try {
         const id = Number(req.params.id);
 
-        const questao = await service.buscarQuestaoPorId(id);
+        const questao =
+            await service.buscarQuestaoPorId(id);
 
         res.status(200).json(questao);
     } catch (erro) {
@@ -52,10 +57,11 @@ async function criarQuestao(req, res, next) {
             assuntoIds
         } = criarQuestaoDTO(req.body);
 
-        const novaQuestao = await service.criarQuestao(
-            dados,
-            assuntoIds
-        );
+        const novaQuestao =
+            await service.criarQuestao(
+                dados,
+                assuntoIds
+            );
 
         const io = req.app.get('io');
 
@@ -67,9 +73,14 @@ async function criarQuestao(req, res, next) {
             {
                 id: novaQuestao.id,
                 enunciado: novaQuestao.enunciado,
-                disciplinaId: novaQuestao.disciplinaId,
-                categoriaId: novaQuestao.categoriaId,
-                dificuldade: novaQuestao.dificuldade
+                disciplinaId:
+                    novaQuestao.disciplinaId,
+                categoriaId:
+                    novaQuestao.categoriaId,
+                dificuldade:
+                    novaQuestao.dificuldade,
+                status:
+                    novaQuestao.status
             }
         );
 
@@ -84,16 +95,23 @@ async function substituirQuestao(req, res, next) {
     try {
         const id = Number(req.params.id);
 
+        const questaoAnterior =
+            await service.buscarQuestaoPorId(id);
+
+        const statusAnterior =
+            questaoAnterior.status;
+
         const {
             dados,
             assuntoIds
         } = criarQuestaoDTO(req.body);
 
-        const questao = await service.substituirQuestao(
-            id,
-            dados,
-            assuntoIds
-        );
+        const questao =
+            await service.substituirQuestao(
+                id,
+                dados,
+                assuntoIds
+            );
 
         const io = req.app.get('io');
 
@@ -105,11 +123,46 @@ async function substituirQuestao(req, res, next) {
             {
                 id: questao.id,
                 enunciado: questao.enunciado,
-                disciplinaId: questao.disciplinaId,
-                categoriaId: questao.categoriaId,
-                dificuldade: questao.dificuldade
+                disciplinaId:
+                    questao.disciplinaId,
+                categoriaId:
+                    questao.categoriaId,
+                dificuldade:
+                    questao.dificuldade,
+                status:
+                    questao.status
             }
         );
+
+        if (questao.status !== statusAnterior) {
+            const notificacao =
+                await notificacoesService.criarNotificacao({
+                    mensagem:
+                        `Questão ${questao.id}: status alterado ` +
+                        `de ${statusAnterior} para ${questao.status}`,
+                    tipo: 'status_questao_alterado',
+                    questaoId: questao.id,
+                    disciplinaId:
+                        questao.disciplinaId
+                });
+
+            io.to(nomeSala).emit(
+                'status_questao_alterado',
+                {
+                    questaoId: questao.id,
+                    disciplinaId:
+                        questao.disciplinaId,
+                    statusAnterior,
+                    statusAtual:
+                        questao.status
+                }
+            );
+
+            io.to(nomeSala).emit(
+                'notificacao_nova',
+                notificacao
+            );
+        }
 
         res.status(200).json(questao);
     } catch (erro) {
@@ -122,16 +175,23 @@ async function atualizarQuestao(req, res, next) {
     try {
         const id = Number(req.params.id);
 
+        const questaoAnterior =
+            await service.buscarQuestaoPorId(id);
+
+        const statusAnterior =
+            questaoAnterior.status;
+
         const {
             dados,
             assuntoIds
         } = atualizarQuestaoDTO(req.body);
 
-        const questao = await service.atualizarQuestao(
-            id,
-            dados,
-            assuntoIds
-        );
+        const questao =
+            await service.atualizarQuestao(
+                id,
+                dados,
+                assuntoIds
+            );
 
         const io = req.app.get('io');
 
@@ -143,11 +203,50 @@ async function atualizarQuestao(req, res, next) {
             {
                 id: questao.id,
                 enunciado: questao.enunciado,
-                disciplinaId: questao.disciplinaId,
-                categoriaId: questao.categoriaId,
-                dificuldade: questao.dificuldade
+                disciplinaId:
+                    questao.disciplinaId,
+                categoriaId:
+                    questao.categoriaId,
+                dificuldade:
+                    questao.dificuldade,
+                status:
+                    questao.status
             }
         );
+
+        if (
+            dados.status !== undefined &&
+            questao.status !== statusAnterior
+        ) {
+            const notificacao =
+                await notificacoesService.criarNotificacao({
+                    mensagem:
+                        `Questão ${questao.id}: status alterado ` +
+                        `de ${statusAnterior} para ${questao.status}`,
+                    tipo: 'status_questao_alterado',
+                    questaoId: questao.id,
+                    disciplinaId:
+                        questao.disciplinaId
+                });
+
+            io.to(nomeSala).emit(
+                'status_questao_alterado',
+                {
+                    questaoId:
+                        questao.id,
+                    disciplinaId:
+                        questao.disciplinaId,
+                    statusAnterior,
+                    statusAtual:
+                        questao.status
+                }
+            );
+
+            io.to(nomeSala).emit(
+                'notificacao_nova',
+                notificacao
+            );
+        }
 
         res.status(200).json(questao);
     } catch (erro) {
@@ -172,7 +271,8 @@ async function excluirQuestao(req, res, next) {
             'questao_excluida',
             {
                 id: questao.id,
-                disciplinaId: questao.disciplinaId
+                disciplinaId:
+                    questao.disciplinaId
             }
         );
 

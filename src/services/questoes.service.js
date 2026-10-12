@@ -1,4 +1,22 @@
 function criarQuestoesService(repository) {
+    const STATUS_VALIDOS = [
+        'rascunho',
+        'em_revisao',
+        'aprovada'
+    ];
+
+    function validarStatus(status) {
+        if (
+            status !== undefined &&
+            !STATUS_VALIDOS.includes(status)
+        ) {
+            const erro = new Error(
+                'Status inválido. Use: rascunho, em_revisao ou aprovada'
+            );
+            erro.statusCode = 400;
+            throw erro;
+        }
+    }
 
     async function listarQuestoes(filtros) {
         return await repository.listarTodas(filtros);
@@ -23,6 +41,8 @@ function criarQuestoesService(repository) {
             throw erro;
         }
 
+        validarStatus(dados.status);
+
         return await repository.criarComAssuntos(
             dados,
             assuntoIds
@@ -35,6 +55,8 @@ function criarQuestoesService(repository) {
             erro.statusCode = 400;
             throw erro;
         }
+
+        validarStatus(dados.status);
 
         const questao = await repository.atualizarComAssuntos(
             id,
@@ -52,6 +74,8 @@ function criarQuestoesService(repository) {
     }
 
     async function atualizarQuestao(id, dados, assuntoIds) {
+        validarStatus(dados.status);
+
         const questao = await repository.atualizarComAssuntos(
             id,
             dados,

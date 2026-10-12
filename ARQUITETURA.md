@@ -2,19 +2,35 @@
 
 ## 1. Visão geral
 
-O projeto é uma API REST para gerenciamento de um Banco de Questões de Matemática.
+O projeto é um Sistema de Acompanhamento de Questões com Notificações ao Vivo, desenvolvido a partir da evolução de uma API REST para gerenciamento de um Banco de Questões.
 
-A aplicação foi desenvolvida inicialmente nos Trabalhos 1 e 2 e, no Trabalho 3, passou por uma refatoração arquitetural com o objetivo de melhorar a separação de responsabilidades, reduzir o acoplamento e facilitar manutenção e testes.
+Nos Trabalhos 1 e 2 foram desenvolvidas a API REST, a persistência com PostgreSQL e Sequelize ORM, os relacionamentos, migrations, seeders, filtros, paginação e transações.
 
-A arquitetura adotada combina:
+No Trabalho 3, o projeto passou por uma refatoração arquitetural para melhorar a separação de responsabilidades, reduzir o acoplamento e facilitar manutenção e testes.
+
+No Trabalho 4, a aplicação foi ampliada com:
+
+- frontend em React;
+- comunicação em tempo real com Socket.IO;
+- salas organizadas por disciplina;
+- notificações persistentes;
+- acompanhamento do status das questões;
+- reconexão automática;
+- Docker e Docker Compose;
+- frontend e backend servidos pela mesma aplicação.
+
+A arquitetura atual combina:
 
 - Arquitetura em camadas;
-- MVC adaptado para API REST;
+- conceitos de MVC;
 - Repository;
 - Injeção de Dependência;
-- DTO (Data Transfer Object).
-
-A refatoração preserva os endpoints e o comportamento externo da API.
+- DTO;
+- comunicação REST;
+- comunicação WebSocket;
+- frontend React;
+- persistência relacional;
+- conteinerização com Docker.
 
 ---
 
@@ -24,14 +40,38 @@ A refatoração preserva os endpoints e o comportamento externo da API.
 Trabalho 1 API/
 │
 ├── config/
-├── migrations/
-├── models/
-├── seeders/
+│   └── config.js
 │
 ├── docs/
 │   └── adr/
 │       ├── 001-arquitetura-em-camadas.md
 │       └── 002-injecao-de-dependencia.md
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── CentroNotificacoes.jsx
+│   │   │   ├── EntrarSala.jsx
+│   │   │   ├── ListaQuestoes.jsx
+│   │   │   ├── PainelTempoReal.jsx
+│   │   │   ├── ParticipantesConectados.jsx
+│   │   │   └── StatusConexao.jsx
+│   │   ├── services/
+│   │   │   └── socket.js
+│   │   └── App.jsx
+│   └── package.json
+│
+├── migrations/
+│
+├── models/
+│   ├── index.js
+│   ├── questao.js
+│   ├── disciplina.js
+│   ├── categoria.js
+│   ├── assunto.js
+│   └── notificacao.js
+│
+├── seeders/
 │
 ├── src/
 │   ├── config/
@@ -41,7 +81,11 @@ Trabalho 1 API/
 │   │   ├── questoes.controller.js
 │   │   ├── disciplinas.controller.js
 │   │   ├── categorias.controller.js
-│   │   └── assuntos.controller.js
+│   │   ├── assuntos.controller.js
+│   │   └── notificacoes.controller.js
+│   │
+│   ├── docs/
+│   │   └── openapi.yaml
 │   │
 │   ├── dtos/
 │   │   └── questao.dto.js
@@ -49,19 +93,28 @@ Trabalho 1 API/
 │   ├── middlewares/
 │   │   └── erro.middleware.js
 │   │
+│   ├── public/
+│   │
 │   ├── repositories/
 │   │   ├── questoes.repository.js
 │   │   ├── disciplinas.repository.js
 │   │   ├── categorias.repository.js
-│   │   └── assuntos.repository.js
+│   │   ├── assuntos.repository.js
+│   │   └── notificacoes.repository.js
 │   │
 │   ├── routes/
+│   │
 │   ├── services/
-│   ├── docs/
-│   │   └── openapi.yaml
+│   │
+│   ├── websocket/
+│   │   └── socket.js
 │   │
 │   └── app.js
 │
+├── .dockerignore
+├── .env.example
+├── Dockerfile
+├── docker-compose.yml
 ├── ARQUITETURA.md
 ├── README.md
 ├── package.json
@@ -70,95 +123,164 @@ Trabalho 1 API/
 
 ---
 
-## 3. Diagrama das camadas
+## 3. Visão geral da arquitetura
+
+A aplicação possui dois fluxos principais.
+
+### Fluxo REST
+
+```text
+React / Swagger / Insomnia
+          ↓
+        Routes
+          ↓
+     Controllers
+          ↓
+       Services
+          ↓
+    Repositories
+          ↓
+ Models / Sequelize
+          ↓
+      PostgreSQL
+```
+
+### Fluxo em tempo real
+
+```text
+Cliente React
+     ↕
+Socket.IO Client
+     ↕
+Socket.IO Server
+     ↕
+Sala da Disciplina
+     ↕
+Outros clientes conectados
+```
+
+As duas formas de comunicação trabalham juntas.
+
+A API REST é responsável pela persistência e pelas operações tradicionais do sistema.
+
+O WebSocket é responsável por enviar atualizações aos clientes imediatamente, sem necessidade de atualizar manualmente a página.
+
+---
+
+## 4. Diagrama geral
 
 ```mermaid
 flowchart TD
-    A[Cliente / Swagger / Insomnia] --> B[Routes]
-    B --> C[Controllers]
-    C --> D[DTO]
-    C --> E[Services]
-    D --> E
+
+    A[Frontend React] --> B[API REST]
+    A <--> W[Socket.IO]
+
+    B --> C[Routes]
+    C --> D[Controllers]
+    D --> E[Services]
     E --> F[Repositories]
     F --> G[Models / Sequelize]
     G --> H[(PostgreSQL)]
+
+    D --> W
+
+    W <--> R[Salas por Disciplina]
 
     I[Container de Dependências] --> E
     I --> F
 ```
 
-Fluxo principal:
-
-```text
-Cliente
-   ↓
-Routes
-   ↓
-Controllers
-   ↓
-Services
-   ↓
-Repositories
-   ↓
-Models / Sequelize
-   ↓
-PostgreSQL
-```
-
 ---
 
-## 4. Responsabilidade de cada camada
+## 5. Responsabilidade das camadas
 
-### Routes
+### 5.1 Routes
 
-As rotas definem os endpoints da API e indicam qual controller deve ser executado.
+As rotas definem os endpoints HTTP e encaminham as requisições para os controllers.
 
 Exemplos:
 
 ```text
 GET /questoes
 POST /questoes
+PATCH /questoes/:id
+
 GET /disciplinas
+
 GET /categorias
+
 GET /assuntos
+
+GET /notificacoes
+PATCH /notificacoes/:id/marcar-como-lida
 ```
 
-As rotas não contêm regras de negócio e não acessam diretamente o banco de dados.
+As rotas não implementam regras de negócio e não acessam diretamente o banco de dados.
 
-### Controllers
+---
+
+### 5.2 Controllers
 
 Os controllers são responsáveis pela comunicação HTTP.
 
 Eles:
 
-- recebem a requisição;
-- acessam parâmetros da URL;
+- recebem parâmetros da URL;
 - recebem dados do body;
-- acessam query parameters;
-- chamam o service;
-- definem o código HTTP;
-- devolvem a resposta ao cliente;
+- recebem query parameters;
+- chamam os services;
+- definem códigos HTTP;
+- retornam as respostas;
 - encaminham erros ao middleware.
 
-Os controllers não acessam diretamente o Sequelize nem os repositories.
+No Trabalho 4, alguns controllers também participam da integração com o sistema de eventos.
 
-### Services
+Por exemplo, depois de uma operação ser concluída com sucesso, o controller de questões pode emitir eventos Socket.IO para os clientes conectados.
 
-Os services concentram as regras da aplicação e a organização dos casos de uso.
+Entre os eventos emitidos estão:
+
+```text
+questao_criada
+questao_atualizada
+questao_excluida
+status_questao_alterado
+notificacao_nova
+```
+
+A regra de persistência continua concentrada nas camadas de service e repository.
+
+---
+
+### 5.3 Services
+
+Os services concentram regras e casos de uso da aplicação.
 
 Entre suas responsabilidades estão:
 
-- verificar se um registro existe;
-- validar informações obrigatórias;
-- definir situações de erro;
+- validar informações;
+- verificar existência de registros;
+- validar status das questões;
 - coordenar operações;
-- chamar os repositories.
+- definir situações de erro;
+- chamar repositories.
 
-Dessa forma, os controllers permanecem focados na comunicação HTTP.
+O campo `status` de uma questão aceita:
 
-### Repositories
+```text
+rascunho
+em_revisao
+aprovada
+```
 
-Os repositories concentram o acesso aos dados.
+Valores diferentes são rejeitados pela aplicação.
+
+Existe também um service específico para as notificações persistentes.
+
+---
+
+### 5.4 Repositories
+
+Os repositories concentram o acesso ao banco de dados.
 
 Nessa camada são utilizadas operações do Sequelize como:
 
@@ -172,48 +294,67 @@ destroy
 include
 ```
 
-Também ficam nos repositories:
+Também ficam nessa camada:
 
 - filtros;
 - paginação;
+- busca;
 - ordenação;
 - relacionamentos;
-- transações.
+- transações;
+- persistência das notificações.
 
-Assim, as outras camadas não precisam conhecer diretamente os detalhes do ORM.
+O objetivo é impedir que detalhes do Sequelize fiquem espalhados pela aplicação.
 
-### Models
+---
 
-Os models representam as entidades persistidas no banco de dados.
+### 5.5 Models
+
+Os models representam as entidades persistidas.
 
 As principais entidades são:
 
-- Questão;
-- Disciplina;
-- Categoria;
-- Assunto.
+```text
+Questão
+Disciplina
+Categoria
+Assunto
+Notificação
+```
 
-Relacionamentos:
+Os principais relacionamentos são:
 
 ```text
 Disciplina 1:N Questões
+
 Categoria 1:N Questões
+
 Questões N:N Assuntos
+
+Disciplina 1:N Notificações
+
+Questão 1:N Notificações
 ```
 
-O relacionamento muitos-para-muitos utiliza a tabela associativa `questao_assuntos`.
+O relacionamento muitos-para-muitos entre questões e assuntos utiliza:
 
-### DTOs
+```text
+questao_assuntos
+```
 
-Os DTOs controlam os dados que entram na aplicação.
+---
 
-Foi criado:
+### 5.6 DTO
+
+O DTO organiza os dados recebidos antes que sejam enviados para a camada de serviço.
+
+Arquivo:
 
 ```text
 src/dtos/questao.dto.js
 ```
 
-Ele é utilizado principalmente nas operações:
+É utilizado principalmente nas operações:
 
 ```text
 POST /questoes
@@ -221,23 +362,30 @@ PUT /questoes/:id
 PATCH /questoes/:id
 ```
 
-O DTO organiza os dados recebidos antes de enviá-los para o service.
+O DTO também inclui o campo `status`.
 
-### Middlewares
+O uso do DTO evita que os controllers precisem montar manualmente os mesmos objetos em diferentes operações.
 
-Os middlewares tratam preocupações utilizadas em diferentes partes da aplicação.
+---
 
-O projeto possui um middleware centralizado de erros, responsável por respostas como:
+### 5.7 Middlewares
+
+Os middlewares tratam responsabilidades comuns da aplicação.
+
+O projeto possui middleware centralizado para tratamento de erros.
+
+Entre os códigos retornados estão:
 
 ```text
 400 - Dados inválidos
 404 - Recurso não encontrado
-409 - Conflito
+409 - Conflito de integridade
 500 - Erro interno
-503 - Falha de conexão com o banco
 ```
 
-### Container de Dependências
+---
+
+### 5.8 Container de Dependências
 
 O arquivo:
 
@@ -247,216 +395,633 @@ src/config/container.js
 
 é responsável por montar as dependências da aplicação.
 
-Ele conecta cada repository ao seu respectivo service.
-
-Exemplo:
+O fluxo é:
 
 ```text
-Questões Repository
-        ↓
-     Container
-        ↓
-Questões Service
+Repository
+    ↓
+Container
+    ↓
+Service
 ```
 
-O service recebe o repository que irá utilizar, em vez de importar diretamente uma implementação específica.
+O container também realiza a composição das dependências relacionadas às notificações.
+
+Isso permite que um service receba a implementação que irá utilizar sem precisar instanciá-la diretamente.
 
 ---
 
-## 5. Aplicação do MVC
+## 6. MVC no projeto
 
-O projeto também utiliza conceitos do padrão MVC.
+O sistema utiliza conceitos de MVC adaptados à arquitetura em camadas.
 
 ### Model
 
-O Model é representado principalmente pelos arquivos da pasta:
+Representado principalmente pelos arquivos da pasta:
 
 ```text
 models/
 ```
 
-Eles representam os dados e relacionamentos utilizados pelo Sequelize.
+Os models representam as entidades persistidas pelo Sequelize.
 
 ### Controller
 
-O Controller é representado pelos arquivos existentes em:
+Representado por:
 
 ```text
 src/controllers/
 ```
 
-Eles recebem as requisições HTTP e encaminham as operações para os services.
+Os controllers recebem requisições e acionam os casos de uso.
 
 ### View
 
-Como o projeto é uma API REST, não existe uma interface gráfica tradicional.
+Nos Trabalhos anteriores, a API retornava apenas respostas JSON.
 
-A representação dos dados é feita principalmente por respostas JSON enviadas ao cliente.
+No Trabalho 4 foi criado um frontend em React.
+
+Assim, a camada visual passou a ser representada pela aplicação existente em:
+
+```text
+frontend/
+```
+
+O React consome a API REST e também recebe atualizações pelo Socket.IO.
 
 ---
 
-## 6. Fluxo completo de uma requisição
+## 7. Frontend React
+
+O frontend foi criado com React e Vite.
+
+Os principais componentes são:
+
+```text
+StatusConexao
+EntrarSala
+ParticipantesConectados
+ListaQuestoes
+PainelTempoReal
+CentroNotificacoes
+```
+
+### StatusConexao
+
+Mostra se o cliente está conectado ao servidor Socket.IO.
+
+Também identifica situações de desconexão e reconexão.
+
+### EntrarSala
+
+Permite informar o usuário e a disciplina que será acompanhada.
+
+Também mantém os dados necessários para que o cliente volte automaticamente à sala depois de uma reconexão.
+
+### ParticipantesConectados
+
+Mostra os participantes atualmente conectados à sala.
+
+### ListaQuestoes
+
+Consome a API REST.
+
+Permite:
+
+- listar questões;
+- buscar pelo enunciado;
+- filtrar por status;
+- atualizar os dados quando eventos Socket.IO são recebidos.
+
+### PainelTempoReal
+
+Apresenta eventos recebidos pelo WebSocket.
+
+Entre eles:
+
+```text
+questao_criada
+questao_atualizada
+questao_excluida
+status_questao_alterado
+```
+
+### CentroNotificacoes
+
+Apresenta as notificações armazenadas no banco.
+
+Também recebe:
+
+```text
+notificacao_nova
+```
+
+pelo WebSocket.
+
+O usuário pode marcar uma notificação como lida.
+
+Esse estado é persistido no PostgreSQL.
+
+---
+
+## 8. Comunicação WebSocket
+
+A comunicação em tempo real é implementada com Socket.IO.
+
+O servidor é configurado em:
+
+```text
+src/websocket/socket.js
+```
+
+O cliente é configurado em:
+
+```text
+frontend/src/services/socket.js
+```
+
+---
+
+## 9. Salas por disciplina
+
+Os clientes são agrupados em salas.
+
+O formato utilizado é:
+
+```text
+disciplina:<id>
+```
 
 Exemplo:
 
 ```text
-GET /questoes/1
+disciplina:1
 ```
 
-### 1. Cliente
+Assim, um evento relacionado a uma questão de determinada disciplina pode ser enviado apenas para os usuários interessados naquela disciplina.
 
-O cliente envia:
+---
+
+## 10. Eventos recebidos pelo servidor
+
+Entre os eventos enviados pelo cliente para o servidor estão:
 
 ```text
-GET /questoes/1
+entrar_sala
+sair_sala
 ```
 
-### 2. Route
+O servidor valida os dados antes de processar a entrada.
 
-A rota identifica o endpoint e chama o controller correspondente.
+Caso exista algum problema, pode emitir:
 
 ```text
-questoes.routes.js
-        ↓
-questoes.controller.js
+erro_socket
 ```
 
-### 3. Controller
-
-O controller recebe o `id` da URL e chama:
+Após a entrada ou saída, também podem ser emitidos:
 
 ```text
-service.buscarQuestaoPorId(id)
+sala_entrada_confirmada
+sala_saida_confirmada
+participantes_atualizados
 ```
 
-### 4. Service
+---
 
-O service chama:
+## 11. Eventos de negócio
 
-```text
-repository.buscarPorId(id)
-```
+Os principais eventos utilizados na aplicação são:
 
-O service também verifica se a questão existe.
+### questao_criada
 
-Caso não exista, gera um erro `404`.
+Emitido depois que uma questão é cadastrada.
 
-### 5. Repository
+### questao_atualizada
 
-O repository utiliza o Sequelize para realizar a consulta ao banco.
+Emitido depois que uma questão é atualizada.
+
+### questao_excluida
+
+Emitido depois que uma questão é removida.
+
+### status_questao_alterado
+
+Emitido quando ocorre mudança no status da questão.
+
+### notificacao_nova
+
+Emitido quando uma nova notificação persistente é criada.
+
+Esses eventos permitem que diferentes clientes visualizem as mudanças sem precisar atualizar manualmente o navegador.
+
+---
+
+## 12. Fluxo de alteração de status
+
+Um dos fluxos principais do Trabalho 4 acontece quando o status de uma questão é alterado.
 
 Exemplo:
 
 ```text
-Questao.findByPk(...)
+PATCH /questoes/12
 ```
 
-Também podem ser carregados os relacionamentos com Disciplina, Categoria e Assuntos.
+Body:
 
-### 6. Banco
+```json
+{
+  "status": "aprovada"
+}
+```
 
-O Sequelize executa a consulta no PostgreSQL.
+Fluxo simplificado:
 
-### 7. Retorno
+```text
+Cliente
+   ↓
+PATCH /questoes/12
+   ↓
+Route
+   ↓
+Controller
+   ↓
+DTO
+   ↓
+Service
+   ↓
+Repository
+   ↓
+PostgreSQL
+```
 
-Os dados percorrem o caminho inverso:
+Depois da atualização:
+
+```text
+Status anterior é comparado ao novo status
+                  ↓
+         Status foi alterado?
+                  ↓
+                 Sim
+                  ↓
+        Cria notificação persistente
+                  ↓
+              PostgreSQL
+                  ↓
+       Emite eventos Socket.IO
+                  ↓
+            Sala da disciplina
+                  ↓
+          Clientes conectados
+```
+
+São emitidos eventos como:
+
+```text
+questao_atualizada
+status_questao_alterado
+notificacao_nova
+```
+
+---
+
+## 13. Notificações persistentes
+
+As notificações não existem apenas no WebSocket.
+
+Elas são gravadas no PostgreSQL.
+
+Isso resolve um problema importante: eventos WebSocket são temporários, enquanto a notificação precisa continuar disponível posteriormente.
+
+A entidade possui informações como:
+
+```text
+id
+mensagem
+tipo
+lida
+questaoId
+disciplinaId
+created_at
+updated_at
+```
+
+O fluxo é:
+
+```text
+Mudança de estado da questão
+          ↓
+Criação da notificação
+          ↓
+Persistência no PostgreSQL
+          ↓
+Evento notificacao_nova
+          ↓
+Frontend
+```
+
+Quando o usuário marca a notificação como lida:
+
+```text
+Frontend
+   ↓
+PATCH /notificacoes/:id/marcar-como-lida
+   ↓
+API REST
+   ↓
+PostgreSQL
+```
+
+Assim, ao atualizar a página, a notificação continua marcada como lida.
+
+---
+
+## 14. Reconexão
+
+O cliente Socket.IO está configurado para tentar reconectar automaticamente.
+
+Fluxo:
+
+```text
+Cliente conectado
+      ↓
+Conexão interrompida
+      ↓
+Socket.IO tenta reconectar
+      ↓
+Conexão restabelecida
+      ↓
+Cliente entra novamente na sala anterior
+```
+
+Essa estratégia evita que o usuário precise atualizar a página ou informar novamente a sala depois de uma interrupção temporária.
+
+---
+
+## 15. Integração REST e WebSocket
+
+REST e WebSocket possuem responsabilidades diferentes.
+
+### REST
+
+Usado para:
+
+- CRUD;
+- consultas;
+- filtros;
+- busca;
+- paginação;
+- atualização do status;
+- leitura de notificações;
+- persistência.
+
+### WebSocket
+
+Usado para:
+
+- alterações em tempo real;
+- participantes conectados;
+- atualização imediata de questões;
+- alteração de status;
+- novas notificações.
+
+A persistência não depende do WebSocket.
+
+O WebSocket complementa a API REST, permitindo sincronização entre clientes.
+
+---
+
+## 16. Transações
+
+A aplicação utiliza transações do Sequelize nas operações que envolvem questões e seus assuntos.
+
+Exemplo:
+
+```text
+Criar questão
+      +
+Relacionar assuntos
+      ↓
+Uma única transação
+```
+
+Caso uma etapa falhe:
+
+```text
+ROLLBACK
+```
+
+evita que o banco fique com dados parcialmente gravados.
+
+---
+
+## 17. Filtros e paginação
+
+A listagem de questões utiliza filtros e paginação no banco.
+
+Exemplos:
+
+```text
+GET /questoes?page=1&limit=10
+
+GET /questoes?dificuldade=facil
+
+GET /questoes?status=em_revisao
+
+GET /questoes?busca=porcentagem
+```
+
+Os filtros são tratados pelo repository, mantendo os detalhes da persistência fora dos controllers.
+
+---
+
+## 18. Docker
+
+O projeto utiliza Docker para empacotar a aplicação.
+
+O arquivo:
+
+```text
+Dockerfile
+```
+
+possui uma etapa de compilação do frontend React e uma etapa para execução da aplicação Node.js.
+
+Fluxo:
+
+```text
+Código React
+     ↓
+npm run build
+     ↓
+frontend/dist
+     ↓
+copiado para src/public
+     ↓
+Express serve os arquivos
+```
+
+Por isso, frontend e backend ficam disponíveis pela mesma porta.
+
+---
+
+## 19. Docker Compose
+
+O arquivo:
+
+```text
+docker-compose.yml
+```
+
+organiza os serviços:
+
+```text
+app
+db
+```
+
+### Serviço db
+
+Utiliza:
 
 ```text
 PostgreSQL
-    ↓
-Repository
-    ↓
-Service
-    ↓
-Controller
-    ↓
-JSON
-    ↓
-Cliente
+```
+
+Possui:
+
+- volume persistente;
+- variáveis de ambiente;
+- health check.
+
+### Serviço app
+
+Executa:
+
+- migrations;
+- seed;
+- servidor Express;
+- Socket.IO;
+- frontend compilado.
+
+O serviço da aplicação depende da saúde do banco antes de iniciar.
+
+---
+
+## 20. Health checks
+
+O PostgreSQL possui health check baseado na disponibilidade do banco.
+
+A aplicação possui:
+
+```text
+GET /health
+```
+
+Resposta esperada:
+
+```json
+{
+  "status": "ok",
+  "api": "online",
+  "websocket": "ativo"
+}
+```
+
+Esse endpoint também é utilizado pelo Docker para verificar se a aplicação está funcionando.
+
+---
+
+## 21. Persistência do PostgreSQL no Docker
+
+O Docker Compose utiliza um volume:
+
+```text
+postgres_data
+```
+
+O volume mantém os dados mesmo quando os containers são encerrados normalmente.
+
+Com:
+
+```bash
+docker compose down
+```
+
+os containers são removidos, mas o volume permanece.
+
+Para apagar também os dados:
+
+```bash
+docker compose down -v
 ```
 
 ---
 
-## 7. Padrões de projeto utilizados
+## 22. Padrões de projeto
 
-Foram utilizados três padrões principais.
-
-### 7.1 Repository
+### 22.1 Repository
 
 #### Problema
 
-Sem uma camada específica de persistência, as consultas ao banco poderiam ficar espalhadas por controllers e services.
-
-Isso aumentaria o acoplamento com o Sequelize.
+Sem uma camada própria de persistência, operações do Sequelize poderiam ficar espalhadas pela aplicação.
 
 #### Decisão
 
-Foi criada a camada:
+Foi criada:
 
 ```text
 src/repositories/
 ```
 
-Ela concentra as operações de persistência.
-
 #### Benefícios
 
 - isolamento do ORM;
 - menor acoplamento;
+- organização;
 - facilidade de manutenção;
-- melhor organização;
-- possibilidade de substituir a implementação de persistência com menor impacto.
-
-#### Sem esse padrão
-
-Controllers ou services poderiam acessar diretamente o Sequelize, tornando o sistema mais difícil de testar e manter.
+- maior facilidade para testes.
 
 ---
 
-### 7.2 Injeção de Dependência
+### 22.2 Injeção de Dependência
 
 #### Problema
 
-Inicialmente, cada service importava diretamente seu repository.
-
-Isso criava uma dependência forte entre as implementações.
+Services diretamente ligados aos repositories aumentariam o acoplamento.
 
 #### Decisão
 
-Os services passaram a receber os repositories por parâmetro.
-
-A montagem é feita em:
+As dependências são montadas em:
 
 ```text
 src/config/container.js
 ```
 
-Exemplo:
+Fluxo:
 
 ```text
-criarQuestoesService(questoesRepository)
+Repository
+    ↓
+Container
+    ↓
+Service
 ```
 
 #### Benefícios
 
-- redução do acoplamento;
-- maior facilidade para testes;
-- possibilidade de trocar implementações;
-- dependências configuradas em um único lugar.
-
-#### Sem esse padrão
-
-Cada service ficaria diretamente ligado a um repository específico, dificultando testes isolados e substituições futuras.
+- menor acoplamento;
+- substituição mais fácil de implementações;
+- facilidade para testes;
+- dependências centralizadas.
 
 ---
 
-### 7.3 DTO
+### 22.3 DTO
 
 #### Problema
 
-O controller de Questões precisava montar manualmente os dados recebidos pelo `req.body` em diferentes operações.
-
-Isso gerava repetição.
+Os controllers precisavam organizar repetidamente os dados recebidos.
 
 #### Decisão
 
@@ -466,24 +1031,18 @@ Foi criado:
 src/dtos/questao.dto.js
 ```
 
-com funções responsáveis por organizar os dados de entrada.
-
 #### Benefícios
 
-- menor repetição;
-- controllers mais simples;
-- controle sobre os campos recebidos;
-- facilidade para alterar o formato de entrada futuramente.
-
-#### Sem esse padrão
-
-A montagem dos objetos continuaria repetida em vários métodos dos controllers.
+- reduz repetição;
+- controla campos aceitos;
+- deixa controllers menores;
+- facilita evolução futura.
 
 ---
 
-## 8. Dependências entre camadas
+## 23. Regra de dependência
 
-A regra principal é:
+O fluxo principal permanece:
 
 ```text
 Route
@@ -494,134 +1053,202 @@ Service
   ↓
 Repository
   ↓
-Model / Banco
+Model
+  ↓
+Banco
 ```
 
-Uma camada não deve pular níveis.
+Uma camada não deve pular diretamente para uma camada inferior sem necessidade.
 
 Por exemplo:
-
-```text
-Controller → Repository
-```
-
-não deve acontecer.
-
-Também não deve existir:
 
 ```text
 Controller → Sequelize
 ```
 
-O acesso ao ORM fica concentrado na camada de repository.
+não deve acontecer.
+
+O acesso ao ORM fica concentrado nos repositories.
 
 ---
 
-## 9. Preservação do comportamento
+## 24. Documentação da API
 
-Após a refatoração, foram testados os endpoints principais:
-
-```text
-GET /questoes
-GET /disciplinas
-GET /categorias
-GET /assuntos
-GET /disciplinas/1/questoes
-```
-
-Também foram testadas operações de escrita:
+A documentação OpenAPI está localizada em:
 
 ```text
-POST /questoes
-PATCH /questoes/:id
-DELETE /questoes/:id
+src/docs/openapi.yaml
 ```
 
-A criação retornou `201`, a atualização retornou `200` e a exclusão retornou `204`.
+O Swagger pode ser acessado em:
 
-A documentação Swagger também permaneceu disponível.
+```text
+http://localhost:3000/docs
+```
 
-Assim, a reorganização alterou a estrutura interna sem modificar o comportamento esperado da API.
+A documentação inclui:
+
+- questões;
+- disciplinas;
+- categorias;
+- assuntos;
+- notificações;
+- filtros;
+- status;
+- health check.
 
 ---
 
-## 10. Qualidade do código
+## 25. Execução conteinerizada
 
-O projeto utiliza ESLint para verificar problemas no código.
-
-Comando utilizado:
+O sistema completo pode ser iniciado com:
 
 ```bash
-npx eslint .
+docker compose up --build
 ```
 
-Resultado final:
+O processo realiza:
 
 ```text
-0 erros
-0 warnings
+criação dos containers
+       ↓
+inicialização do PostgreSQL
+       ↓
+health check do banco
+       ↓
+execução das migrations
+       ↓
+execução do seed
+       ↓
+inicialização do Node.js
+       ↓
+Express + Socket.IO + React
+       ↓
+porta 3000
 ```
 
-Também foi utilizada a ferramenta Madge para verificar dependências circulares:
-
-```bash
-npx madge --circular src
-```
-
-Resultado:
+A aplicação fica disponível em:
 
 ```text
-No circular dependency found!
+http://localhost:3000
 ```
-
-Também foi verificado que controllers, services e routes não utilizam diretamente operações do Sequelize.
 
 ---
 
-## 11. Benefícios da arquitetura adotada
+## 26. Testes realizados no Trabalho 4
 
-A refatoração trouxe:
+Foram realizados testes com dois clientes simultaneamente.
 
-- melhor separação de responsabilidades;
-- redução do acoplamento;
-- controllers menores;
-- regras concentradas nos services;
-- acesso ao banco concentrado nos repositories;
-- maior facilidade para testes;
-- manutenção mais simples;
-- maior organização do projeto;
-- possibilidade de evolução futura com menor impacto.
+Foi validado que:
 
-Antes:
+- dois clientes entram na mesma sala;
+- participantes são atualizados em tempo real;
+- questões criadas são informadas aos clientes;
+- questões atualizadas são informadas aos clientes;
+- questões excluídas são informadas aos clientes;
+- mudanças de status aparecem em tempo real;
+- notificações são criadas e persistidas;
+- notificações permanecem após atualizar a página;
+- uma notificação marcada como lida continua lida;
+- a desconexão é identificada;
+- o Socket.IO reconecta automaticamente;
+- o cliente retorna à sala após reconexão;
+- o frontend consome a API;
+- a busca de questões funciona;
+- o filtro por status funciona;
+- Docker Compose inicia aplicação e banco;
+- o frontend é servido pela porta 3000;
+- `/health` responde corretamente;
+- `/docs` apresenta a documentação Swagger.
+
+---
+
+## 27. Evolução da arquitetura
+
+### Trabalhos iniciais
+
+O foco estava na criação da API e persistência.
+
+### Trabalho 3
+
+A arquitetura passou para:
 
 ```text
-Route → Controller → Repository
+Route
+  ↓
+Controller
+  ↓
+Service
+  ↓
+Repository
+  ↓
+Banco
 ```
 
-Depois:
-
-```text
-Route → Controller → Service → Repository
-```
-
-Com Injeção de Dependência:
+Também foram introduzidos:
 
 ```text
 Repository
-     ↓
-Container
-     ↓
-Service
+Dependency Injection
+DTO
 ```
+
+### Trabalho 4
+
+A arquitetura foi ampliada para:
+
+```text
+                  ┌── REST ──→ Camadas ──→ PostgreSQL
+Frontend React ───┤
+                  └── Socket.IO ──→ Salas ──→ Clientes
+```
+
+Além disso:
+
+```text
+React
+Socket.IO
+Notificações persistentes
+Status das questões
+Reconexão
+Docker
+Docker Compose
+Health checks
+```
+
+foram integrados à aplicação.
 
 ---
 
-## 12. Conclusão
+## 28. Benefícios da arquitetura atual
 
-A refatoração não alterou o objetivo da API, mas reorganizou sua estrutura interna.
+A arquitetura adotada proporciona:
 
-O projeto passou a utilizar uma arquitetura em camadas com responsabilidades mais bem definidas e conceitos de MVC.
+- separação de responsabilidades;
+- menor acoplamento;
+- organização das regras de negócio;
+- isolamento do acesso ao banco;
+- comunicação em tempo real;
+- sincronização entre clientes;
+- persistência das notificações;
+- recuperação após reconexões;
+- execução reproduzível com Docker;
+- frontend e backend integrados;
+- facilidade de manutenção;
+- possibilidade de evolução futura.
 
-Os padrões Repository, Injeção de Dependência e DTO foram aplicados para resolver problemas reais do projeto, evitando adicionar complexidade sem necessidade.
+---
 
-Com essa estrutura, a API fica mais organizada, testável e preparada para futuras manutenções e evoluções.
+## 29. Conclusão
+
+A arquitetura do projeto evoluiu progressivamente durante os quatro trabalhos.
+
+O sistema começou como uma API REST e passou a utilizar persistência relacional, arquitetura em camadas, padrões de projeto, frontend React, WebSockets e conteinerização.
+
+O uso de REST continua responsável pelas operações persistentes, enquanto o Socket.IO permite atualizações em tempo real.
+
+As notificações persistentes unem esses dois mecanismos: são armazenadas no PostgreSQL e, ao mesmo tempo, enviadas imediatamente aos usuários conectados.
+
+A utilização de Repository, Injeção de Dependência e DTO mantém a organização construída no Trabalho 3.
+
+Por fim, Docker e Docker Compose permitem iniciar frontend, backend e PostgreSQL de forma padronizada, facilitando a execução e apresentação do sistema.

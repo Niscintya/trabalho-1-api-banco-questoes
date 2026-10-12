@@ -1,7 +1,9 @@
 import StatusConexao from './components/StatusConexao';
 import EntrarSala from './components/EntrarSala';
 import ParticipantesConectados from './components/ParticipantesConectados';
+import ListaQuestoes from './components/ListaQuestoes';
 import PainelTempoReal from './components/PainelTempoReal';
+import CentroNotificacoes from './components/CentroNotificacoes';
 
 function App() {
     return (
@@ -28,7 +30,15 @@ function App() {
 
             <hr />
 
+            <ListaQuestoes />
+
+            <hr />
+
             <PainelTempoReal />
+
+            <hr />
+
+            <CentroNotificacoes />
         </main>
     );
 }

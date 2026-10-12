@@ -1,5 +1,3 @@
-'use strict';
-
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
@@ -42,6 +40,16 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.STRING,
                 allowNull: false,
                 defaultValue: 'media'
+            },
+
+            status: {
+                type: DataTypes.ENUM(
+                    'rascunho',
+                    'em_revisao',
+                    'aprovada'
+                ),
+                allowNull: false,
+                defaultValue: 'rascunho'
             }
         },
         {

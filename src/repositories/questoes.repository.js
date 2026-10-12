@@ -10,28 +10,38 @@ const { Op } = require('sequelize');
 
 // Valida se disciplina, categoria e assuntos existem
 async function validarRelacionamentos(dados, assuntoIds = []) {
-
     if (dados.disciplinaId !== undefined) {
-        const disciplina = await Disciplina.findByPk(dados.disciplinaId);
+        const disciplina = await Disciplina.findByPk(
+            dados.disciplinaId
+        );
 
         if (!disciplina) {
-            const erro = new Error('Disciplina não encontrada');
+            const erro = new Error(
+                'Disciplina não encontrada'
+            );
             erro.statusCode = 404;
             throw erro;
         }
     }
 
     if (dados.categoriaId !== undefined) {
-        const categoria = await Categoria.findByPk(dados.categoriaId);
+        const categoria = await Categoria.findByPk(
+            dados.categoriaId
+        );
 
         if (!categoria) {
-            const erro = new Error('Categoria não encontrada');
+            const erro = new Error(
+                'Categoria não encontrada'
+            );
             erro.statusCode = 404;
             throw erro;
         }
     }
 
-    if (Array.isArray(assuntoIds) && assuntoIds.length > 0) {
+    if (
+        Array.isArray(assuntoIds) &&
+        assuntoIds.length > 0
+    ) {
         const assuntos = await Assunto.findAll({
             where: {
                 id: {
@@ -41,7 +51,9 @@ async function validarRelacionamentos(dados, assuntoIds = []) {
         });
 
         if (assuntos.length !== assuntoIds.length) {
-            const erro = new Error('Um ou mais assuntos não foram encontrados');
+            const erro = new Error(
+                'Um ou mais assuntos não foram encontrados'
+            );
             erro.statusCode = 404;
             throw erro;
         }
@@ -52,6 +64,7 @@ async function validarRelacionamentos(dados, assuntoIds = []) {
 async function listarTodas(opcoes = {}) {
     const {
         dificuldade,
+        status,
         busca,
         page = 1,
         limit = 10,
@@ -63,6 +76,10 @@ async function listarTodas(opcoes = {}) {
 
     if (dificuldade) {
         where.dificuldade = dificuldade;
+    }
+
+    if (status) {
+        where.status = status;
     }
 
     if (busca) {
@@ -79,37 +96,47 @@ async function listarTodas(opcoes = {}) {
         'id',
         'enunciado',
         'dificuldade',
+        'status',
         'createdAt'
     ];
 
-    const campoOrdenacao = camposPermitidos.includes(ordenar)
-        ? ordenar
-        : 'id';
+    const campoOrdenacao =
+        camposPermitidos.includes(ordenar)
+            ? ordenar
+            : 'id';
 
     const direcaoOrdenacao =
         String(direcao).toLowerCase() === 'desc'
             ? 'DESC'
             : 'ASC';
 
-    const resultado = await Questao.findAndCountAll({
-        where,
-        include: [
-            { model: Disciplina },
-            { model: Categoria },
-            { model: Assunto }
-        ],
-        order: [[campoOrdenacao, direcaoOrdenacao]],
-        limit: limite,
-        offset,
-        distinct: true
-    });
+    const resultado =
+        await Questao.findAndCountAll({
+            where,
+            include: [
+                { model: Disciplina },
+                { model: Categoria },
+                { model: Assunto }
+            ],
+            order: [
+                [
+                    campoOrdenacao,
+                    direcaoOrdenacao
+                ]
+            ],
+            limit: limite,
+            offset,
+            distinct: true
+        });
 
     return {
         dados: resultado.rows,
         total: resultado.count,
         page: pagina,
         limit: limite,
-        totalPaginas: Math.ceil(resultado.count / limite)
+        totalPaginas: Math.ceil(
+            resultado.count / limite
+        )
     };
 }
 
@@ -132,27 +159,40 @@ async function criar(dados) {
 }
 
 // CRIAR QUESTÃO COM ASSUNTOS - TRANSAÇÃO
-async function criarComAssuntos(dados, assuntoIds = []) {
+async function criarComAssuntos(
+    dados,
+    assuntoIds = []
+) {
+    await validarRelacionamentos(
+        dados,
+        assuntoIds
+    );
 
-    await validarRelacionamentos(dados, assuntoIds);
-
-    const transacao = await sequelize.transaction();
+    const transacao =
+        await sequelize.transaction();
 
     try {
-        const questao = await Questao.create(dados, {
-            transaction: transacao
-        });
+        const questao = await Questao.create(
+            dados,
+            {
+                transaction: transacao
+            }
+        );
 
         if (assuntoIds.length > 0) {
-            await questao.setAssuntos(assuntoIds, {
-                transaction: transacao
-            });
+            await questao.setAssuntos(
+                assuntoIds,
+                {
+                    transaction: transacao
+                }
+            );
         }
 
         await transacao.commit();
 
-        return await buscarPorId(questao.id);
-
+        return await buscarPorId(
+            questao.id
+        );
     } catch (erro) {
         await transacao.rollback();
         throw erro;
@@ -161,10 +201,10 @@ async function criarComAssuntos(dados, assuntoIds = []) {
 
 // ATUALIZAR QUESTÃO
 async function atualizar(id, dados) {
-
     await validarRelacionamentos(dados);
 
-    const questao = await Questao.findByPk(id);
+    const questao =
+        await Questao.findByPk(id);
 
     if (!questao) {
         return null;
@@ -176,39 +216,54 @@ async function atualizar(id, dados) {
 }
 
 // ATUALIZAR QUESTÃO COM ASSUNTOS - TRANSAÇÃO
-async function atualizarComAssuntos(id, dados, assuntoIds) {
-
+async function atualizarComAssuntos(
+    id,
+    dados,
+    assuntoIds
+) {
     await validarRelacionamentos(
         dados,
-        Array.isArray(assuntoIds) ? assuntoIds : []
+        Array.isArray(assuntoIds)
+            ? assuntoIds
+            : []
     );
 
-    const transacao = await sequelize.transaction();
+    const transacao =
+        await sequelize.transaction();
 
     try {
-        const questao = await Questao.findByPk(id, {
-            transaction: transacao
-        });
+        const questao =
+            await Questao.findByPk(
+                id,
+                {
+                    transaction: transacao
+                }
+            );
 
         if (!questao) {
             await transacao.rollback();
             return null;
         }
 
-        await questao.update(dados, {
-            transaction: transacao
-        });
+        await questao.update(
+            dados,
+            {
+                transaction: transacao
+            }
+        );
 
         if (Array.isArray(assuntoIds)) {
-            await questao.setAssuntos(assuntoIds, {
-                transaction: transacao
-            });
+            await questao.setAssuntos(
+                assuntoIds,
+                {
+                    transaction: transacao
+                }
+            );
         }
 
         await transacao.commit();
 
         return await buscarPorId(id);
-
     } catch (erro) {
         await transacao.rollback();
         throw erro;
@@ -217,8 +272,8 @@ async function atualizarComAssuntos(id, dados, assuntoIds) {
 
 // EXCLUIR QUESTÃO
 async function excluir(id) {
-
-    const questao = await Questao.findByPk(id);
+    const questao =
+        await Questao.findByPk(id);
 
     if (!questao) {
         return null;

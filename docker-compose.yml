@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: banco-questoes-db
+
+    environment:
+      POSTGRES_DB: ${DOCKER_DB_DATABASE:-banco_questoes}
+      POSTGRES_USER: ${DOCKER_DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DOCKER_DB_PASSWORD:-postgres}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: banco-questoes-app
+
+    environment:
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DIALECT: postgres
+      DB_DATABASE: ${DOCKER_DB_DATABASE:-banco_questoes}
+      DB_USERNAME: ${DOCKER_DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DOCKER_DB_PASSWORD:-postgres}
+      PORT: 3000
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

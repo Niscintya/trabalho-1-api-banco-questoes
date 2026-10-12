@@ -4,7 +4,8 @@ function criarQuestaoDTO(body = {}) {
             enunciado: body.enunciado,
             disciplinaId: body.disciplinaId,
             categoriaId: body.categoriaId,
-            dificuldade: body.dificuldade
+            dificuldade: body.dificuldade,
+            status: body.status
         },
 
         assuntoIds: Array.isArray(body.assuntoIds)
@@ -30,6 +31,10 @@ function atualizarQuestaoDTO(body = {}) {
 
     if (body.dificuldade !== undefined) {
         dados.dificuldade = body.dificuldade;
+    }
+
+    if (body.status !== undefined) {
+        dados.status = body.status;
     }
 
     const assuntoIds =

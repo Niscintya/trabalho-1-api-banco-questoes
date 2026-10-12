@@ -1,12 +1,23 @@
 {
   "name": "trabalho-1-api",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Sistema de acompanhamento de questões com notificações em tempo real",
+  "main": "src/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/app.js",
+    "migrate": "sequelize-cli db:migrate",
+    "seed": "sequelize-cli db:seed:all",
+    "lint": "eslint .",
+    "build:frontend": "npm --prefix frontend run build",
+    "test": "echo \"Sem testes automatizados configurados\""
   },
-  "keywords": [],
+  "keywords": [
+    "express",
+    "sequelize",
+    "postgresql",
+    "socket.io",
+    "react"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -16,6 +27,7 @@
     "pg": "^8.23.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.8",
+    "sequelize-cli": "^6.6.5",
     "socket.io": "^4.8.4",
     "socket.io-client": "^4.8.4",
     "swagger-ui-express": "^5.0.1",
@@ -25,7 +37,6 @@
   "devDependencies": {
     "eslint": "^10.11.0",
     "globals": "^17.12.0",
-    "madge": "^8.0.0",
-    "sequelize-cli": "^6.6.5"
+    "madge": "^8.0.0"
   }
 }

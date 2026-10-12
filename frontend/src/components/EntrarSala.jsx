@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import socket from '../services/socket';
 
 function EntrarSala() {
@@ -6,12 +6,80 @@ function EntrarSala() {
     const [disciplinaId, setDisciplinaId] = useState('');
     const [salaAtual, setSalaAtual] = useState('');
 
+    const dadosSalaRef = useRef(null);
+
+    useEffect(() => {
+        function aoConectar() {
+            if (dadosSalaRef.current) {
+                socket.emit(
+                    'entrar_sala',
+                    dadosSalaRef.current
+                );
+            }
+        }
+
+        function aoDesconectar() {
+            setSalaAtual('');
+        }
+
+        function aoConfirmarEntrada(dados) {
+            setSalaAtual(dados.sala);
+        }
+
+        function aoConfirmarSaida() {
+            setSalaAtual('');
+        }
+
+        function aoReceberErro(dados) {
+            alert(dados.erro);
+        }
+
+        socket.on('connect', aoConectar);
+        socket.on('disconnect', aoDesconectar);
+
+        socket.on(
+            'sala_entrada_confirmada',
+            aoConfirmarEntrada
+        );
+
+        socket.on(
+            'sala_saida_confirmada',
+            aoConfirmarSaida
+        );
+
+        socket.on(
+            'erro_socket',
+            aoReceberErro
+        );
+
+        return () => {
+            socket.off('connect', aoConectar);
+            socket.off('disconnect', aoDesconectar);
+
+            socket.off(
+                'sala_entrada_confirmada',
+                aoConfirmarEntrada
+            );
+
+            socket.off(
+                'sala_saida_confirmada',
+                aoConfirmarSaida
+            );
+
+            socket.off(
+                'erro_socket',
+                aoReceberErro
+            );
+        };
+    }, []);
+
     function entrarNaSala(evento) {
         evento.preventDefault();
 
         const id = Number(disciplinaId);
+        const nomeLimpo = nome.trim();
 
-        if (!nome.trim()) {
+        if (!nomeLimpo) {
             alert('Informe seu nome.');
             return;
         }
@@ -21,51 +89,35 @@ function EntrarSala() {
             return;
         }
 
-        if (!socket.connected) {
+        const dadosSala = {
+            nome: nomeLimpo,
+            disciplinaId: id
+        };
+
+        dadosSalaRef.current = dadosSala;
+
+        if (socket.connected) {
+            socket.emit(
+                'entrar_sala',
+                dadosSala
+            );
+        } else {
             socket.connect();
         }
-
-        socket.emit('entrar_sala', {
-            nome: nome.trim(),
-            disciplinaId: id
-        });
     }
 
     function sairDaSala() {
-        socket.emit('sair_sala');
+        dadosSalaRef.current = null;
+
+        if (socket.connected) {
+            socket.emit('sair_sala');
+        }
 
         setSalaAtual('');
     }
 
-    socket.off('sala_entrada_confirmada');
-
-    socket.on(
-        'sala_entrada_confirmada',
-        (dados) => {
-            setSalaAtual(dados.sala);
-        }
-    );
-
-    socket.off('sala_saida_confirmada');
-
-    socket.on(
-        'sala_saida_confirmada',
-        () => {
-            setSalaAtual('');
-        }
-    );
-
-    socket.off('erro_socket');
-
-    socket.on(
-        'erro_socket',
-        (dados) => {
-            alert(dados.erro);
-        }
-    );
-
     return (
-        <div>
+        <section>
             <h2>Entrar em uma disciplina</h2>
 
             <form onSubmit={entrarNaSala}>
@@ -79,7 +131,9 @@ function EntrarSala() {
                         type="text"
                         value={nome}
                         onChange={(evento) =>
-                            setNome(evento.target.value)
+                            setNome(
+                                evento.target.value
+                            )
                         }
                         placeholder="Seu nome"
                     />
@@ -112,7 +166,10 @@ function EntrarSala() {
             {salaAtual && (
                 <div>
                     <p>
-                        Sala atual: <strong>{salaAtual}</strong>
+                        Sala atual:{' '}
+                        <strong>
+                            {salaAtual}
+                        </strong>
                     </p>
 
                     <button
@@ -123,7 +180,7 @@ function EntrarSala() {
                     </button>
                 </div>
             )}
-        </div>
+        </section>
     );
 }
 

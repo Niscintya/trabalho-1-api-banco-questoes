@@ -6,6 +6,7 @@ function PainelTempoReal() {
     const [criadas, setCriadas] = useState(0);
     const [atualizadas, setAtualizadas] = useState(0);
     const [excluidas, setExcluidas] = useState(0);
+    const [statusAlterados, setStatusAlterados] = useState(0);
 
     useEffect(() => {
         function adicionarEvento(tipo, dados) {
@@ -49,6 +50,17 @@ function PainelTempoReal() {
             );
         }
 
+        function aoAlterarStatus(dados) {
+            setStatusAlterados(
+                (valor) => valor + 1
+            );
+
+            adicionarEvento(
+                'Status alterado',
+                dados
+            );
+        }
+
         socket.on(
             'questao_criada',
             aoCriarQuestao
@@ -62,6 +74,11 @@ function PainelTempoReal() {
         socket.on(
             'questao_excluida',
             aoExcluirQuestao
+        );
+
+        socket.on(
+            'status_questao_alterado',
+            aoAlterarStatus
         );
 
         return () => {
@@ -79,6 +96,11 @@ function PainelTempoReal() {
                 'questao_excluida',
                 aoExcluirQuestao
             );
+
+            socket.off(
+                'status_questao_alterado',
+                aoAlterarStatus
+            );
         };
     }, []);
 
@@ -88,15 +110,23 @@ function PainelTempoReal() {
 
             <div>
                 <p>
-                    Questões criadas: <strong>{criadas}</strong>
+                    Questões criadas:{' '}
+                    <strong>{criadas}</strong>
                 </p>
 
                 <p>
-                    Questões atualizadas: <strong>{atualizadas}</strong>
+                    Questões atualizadas:{' '}
+                    <strong>{atualizadas}</strong>
                 </p>
 
                 <p>
-                    Questões excluídas: <strong>{excluidas}</strong>
+                    Questões excluídas:{' '}
+                    <strong>{excluidas}</strong>
+                </p>
+
+                <p>
+                    Status alterados:{' '}
+                    <strong>{statusAlterados}</strong>
                 </p>
             </div>
 
@@ -124,9 +154,27 @@ function PainelTempoReal() {
                                 </p>
                             )}
 
-                            <p>
-                                ID: {evento.dados.id}
-                            </p>
+                            {evento.dados.id && (
+                                <p>
+                                    ID: {evento.dados.id}
+                                </p>
+                            )}
+
+                            {evento.dados.questaoId && (
+                                <p>
+                                    Questão:{' '}
+                                    {evento.dados.questaoId}
+                                </p>
+                            )}
+
+                            {evento.dados.statusAnterior && (
+                                <p>
+                                    Status:{' '}
+                                    {evento.dados.statusAnterior}
+                                    {' → '}
+                                    {evento.dados.statusAtual}
+                                </p>
+                            )}
 
                             <hr />
                         </div>

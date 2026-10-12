@@ -1,276 +1,319 @@
-# API Banco de Questões de Matemática
+# Sistema de Acompanhamento de Questões com Notificações ao Vivo
 
 Projeto desenvolvido para a disciplina de Desenvolvimento de Software.
 
-O projeto consiste em uma API REST para gerenciamento de um Banco de Questões de Matemática. Nesta segunda etapa, a aplicação foi evoluída para utilizar persistência de dados em banco de dados relacional PostgreSQL por meio do framework ORM Sequelize.
+O sistema evolui o Banco de Questões desenvolvido nos trabalhos anteriores, integrando API REST, PostgreSQL, Sequelize ORM, arquitetura em camadas, React, Socket.IO e Docker.
 
-A API permite cadastrar e gerenciar questões, disciplinas, categorias e assuntos, utilizando relacionamentos entre as tabelas, migrations, seeders, transações, paginação, filtros e tratamento de erros.
+Nesta etapa, além do CRUD dos recursos educacionais, a aplicação possui comunicação em tempo real, acompanhamento do status das questões, notificações persistentes e interface web responsiva.
+
+## Trabalho 4
+
+Tema escolhido:
+
+**Opção 3 — Sistema de Acompanhamento de Questões com Notificações ao Vivo**
+
+O sistema permite acompanhar alterações realizadas nas questões sem precisar atualizar manualmente a página.
+
+As questões podem assumir os seguintes status:
+
+- `rascunho`
+- `em_revisao`
+- `aprovada`
+
+Quando o status de uma questão é alterado, o sistema registra uma notificação no PostgreSQL e envia eventos em tempo real aos usuários conectados à sala da disciplina.
 
 ## Tecnologias utilizadas
 
 - Node.js
 - Express
+- React
+- Vite
+- Socket.IO
 - PostgreSQL
 - Sequelize ORM
 - Sequelize CLI
-- JavaScript
 - Swagger / OpenAPI
-- Insomnia
+- Docker
+- Docker Compose
+- JavaScript
 - dotenv
 
-## Recursos da API
+## Recursos principais
 
-A API possui quatro recursos principais:
+A aplicação possui os seguintes recursos:
 
 - Questões
 - Disciplinas
 - Categorias
 - Assuntos
+- Notificações
 
-Os dados são armazenados no PostgreSQL e acessados por meio do Sequelize ORM.
+Além dos recursos REST, a aplicação utiliza WebSockets para comunicação em tempo real.
+
+## Funcionalidades
+
+O sistema permite:
+
+- cadastrar, consultar, atualizar e excluir questões;
+- cadastrar e gerenciar disciplinas, categorias e assuntos;
+- relacionar questões a vários assuntos;
+- pesquisar questões pelo enunciado;
+- filtrar questões por dificuldade e status;
+- acompanhar alterações em tempo real;
+- entrar em salas organizadas por disciplina;
+- visualizar participantes conectados;
+- alterar o status de uma questão;
+- gerar notificações persistentes;
+- marcar notificações como lidas;
+- recuperar notificações após recarregar a página;
+- reconectar automaticamente ao WebSocket;
+- retornar automaticamente à sala após reconexão;
+- executar toda a aplicação com Docker Compose.
 
 ## Modelo de dados
 
-O banco possui as seguintes tabelas principais:
+O banco PostgreSQL possui as seguintes tabelas principais:
 
-- `questoes`
-- `disciplinas`
-- `categorias`
-- `assuntos`
-
-Também existe a tabela associativa:
-
-- `questao_assuntos`
-
-Ela é utilizada para implementar o relacionamento muitos-para-muitos entre questões e assuntos.
-
-## Diagrama Entidade-Relacionamento
-
-```mermaid
-erDiagram
-
-    DISCIPLINAS ||--o{ QUESTOES : possui
-    CATEGORIAS ||--o{ QUESTOES : classifica
-    QUESTOES ||--o{ QUESTAO_ASSUNTOS : possui
-    ASSUNTOS ||--o{ QUESTAO_ASSUNTOS : possui
-
-    DISCIPLINAS {
-        int id PK
-        string nome UK
-        datetime created_at
-        datetime updated_at
-    }
-
-    CATEGORIAS {
-        int id PK
-        string nome UK
-        datetime created_at
-        datetime updated_at
-    }
-
-    ASSUNTOS {
-        int id PK
-        string nome UK
-        datetime created_at
-        datetime updated_at
-    }
-
-    QUESTOES {
-        int id PK
-        text enunciado
-        int disciplinaId FK
-        int categoriaId FK
-        string dificuldade
-        datetime created_at
-        datetime updated_at
-    }
-
-    QUESTAO_ASSUNTOS {
-        int questaoId PK, FK
-        int assuntoId PK, FK
-        datetime created_at
-        datetime updated_at
-    }
+```text
+disciplinas
+categorias
+assuntos
+questoes
+questao_assuntos
+notificacoes
 ```
+
+A tabela `questao_assuntos` implementa o relacionamento muitos-para-muitos entre questões e assuntos.
+
+A tabela `notificacoes` mantém o histórico das notificações mesmo após o servidor ser reiniciado.
 
 ## Relacionamentos
 
-### Disciplina e Questões
+```text
+Disciplina 1:N Questões
 
-Uma disciplina pode possuir várias questões.
+Categoria 1:N Questões
 
-Relacionamento:
+Questões N:N Assuntos
 
-`Disciplina 1:N Questões`
+Disciplina 1:N Notificações
 
-A chave estrangeira `disciplinaId` está presente na tabela `questoes`.
-
-### Categoria e Questões
-
-Uma categoria pode possuir várias questões.
-
-Relacionamento:
-
-`Categoria 1:N Questões`
-
-A chave estrangeira `categoriaId` está presente na tabela `questoes`.
-
-### Questões e Assuntos
-
-Uma questão pode possuir vários assuntos e um assunto pode estar relacionado a várias questões.
-
-Relacionamento:
-
-`Questões N:N Assuntos`
-
-Esse relacionamento é implementado pela tabela associativa `questao_assuntos`.
-
-## Integridade dos dados
-
-As tabelas utilizam:
-
-- Chaves primárias
-- Chaves estrangeiras
-- Campos obrigatórios com `NOT NULL`
-- Restrição `UNIQUE`
-- Valor padrão
-- Campos de auditoria `created_at` e `updated_at`
-
-O campo `dificuldade` das questões possui o valor padrão:
-
-`media`
-
-A API também verifica a existência das chaves estrangeiras antes de criar ou atualizar uma questão.
-
-Caso uma disciplina, categoria ou assunto informado não exista, a API retorna o código HTTP `404`.
-
-## Migrations
-
-A estrutura do banco de dados é controlada por migrations versionadas do Sequelize.
-
-Entre as migrations do projeto estão:
-
-- Criação da tabela de disciplinas
-- Criação da tabela de categorias
-- Criação da tabela de questões
-- Criação da tabela de assuntos
-- Criação da tabela associativa `questao_assuntos`
-- Evolução do campo `dificuldade`, incluindo valor padrão
-- Padronização dos campos de auditoria para `created_at` e `updated_at`
-
-Para executar as migrations:
-
-```bash
-npx sequelize-cli db:migrate
+Questão 1:N Notificações
 ```
 
-Para consultar o estado das migrations:
+## Status das questões
 
-```bash
-npx sequelize-cli db:migrate:status
+O campo `status` possui três valores permitidos:
+
+```text
+rascunho
+em_revisao
+aprovada
 ```
 
-## Seeders
+O valor padrão de uma nova questão é:
 
-O projeto possui seed para popular o banco com dados iniciais.
-
-São inseridos registros para disciplinas, categorias, assuntos e questões, além dos respectivos relacionamentos.
-
-Para executar os seeders:
-
-```bash
-npx sequelize-cli db:seed:all
+```text
+rascunho
 ```
 
-## Transações
+A API valida o status antes de atualizar a questão.
 
-A aplicação utiliza transações do Sequelize nas operações que envolvem questões e assuntos.
+## Notificações persistentes
 
-Ao criar uma questão com assuntos, a questão e seus relacionamentos são gravados dentro de uma transação.
+As notificações são armazenadas na tabela:
 
-Se ocorrer algum erro durante a operação, é realizado `rollback`, evitando que o banco fique com dados parcialmente gravados.
+```text
+notificacoes
+```
 
-## Paginação
+Cada notificação possui informações como:
 
-A listagem de questões utiliza paginação diretamente no banco de dados por meio de `LIMIT` e `OFFSET`.
+```text
+id
+mensagem
+tipo
+lida
+questaoId
+disciplinaId
+created_at
+updated_at
+```
+
+Uma notificação pode ser marcada como lida e continuará com esse estado mesmo após atualizar a página ou reiniciar a aplicação.
+
+## WebSockets
+
+A comunicação em tempo real é implementada com Socket.IO.
+
+Os usuários entram em salas organizadas por disciplina.
 
 Exemplo:
 
 ```text
-GET /questoes?page=1&limit=10
+disciplina:1
 ```
 
-## Filtros
+Isso permite que os eventos sejam enviados somente aos usuários que acompanham aquela disciplina.
 
-É possível filtrar questões pela dificuldade.
+### Eventos principais
+
+A aplicação utiliza, entre outros, os seguintes eventos:
+
+```text
+questao_criada
+questao_atualizada
+questao_excluida
+status_questao_alterado
+notificacao_nova
+```
+
+Também são utilizados eventos para gerenciamento das salas e participantes:
+
+```text
+entrar_sala
+sair_sala
+sala_entrada_confirmada
+sala_saida_confirmada
+participantes_atualizados
+erro_socket
+```
+
+### Evento `questao_criada`
+
+Emitido quando uma nova questão é cadastrada.
+
+Exemplo de payload:
+
+```json
+{
+  "id": 15,
+  "enunciado": "Calcule 20% de 300.",
+  "disciplinaId": 1,
+  "categoriaId": 4,
+  "dificuldade": "facil",
+  "status": "rascunho"
+}
+```
+
+### Evento `status_questao_alterado`
+
+Emitido quando o status de uma questão muda.
 
 Exemplo:
 
-```text
-GET /questoes?dificuldade=facil
+```json
+{
+  "questaoId": 12,
+  "disciplinaId": 1,
+  "statusAnterior": "rascunho",
+  "statusAtual": "em_revisao"
+}
 ```
 
-Também é possível realizar busca pelo enunciado:
+### Evento `notificacao_nova`
+
+Envia ao frontend a nova notificação criada e persistida no banco.
+
+## Reconexão
+
+O cliente Socket.IO está configurado para tentar reconectar automaticamente caso a conexão seja interrompida.
+
+Após a reconexão, o usuário é inserido novamente na sala da disciplina que estava acompanhando.
+
+Dessa forma, o sistema continua recebendo os eventos sem exigir que o usuário atualize a página.
+
+## Frontend React
+
+A interface foi desenvolvida com React e Vite.
+
+Entre os componentes principais estão:
 
 ```text
-GET /questoes?busca=porcentagem
+StatusConexao
+EntrarSala
+ParticipantesConectados
+ListaQuestoes
+PainelTempoReal
+CentroNotificacoes
 ```
 
-## Ordenação
+A interface apresenta:
 
-A listagem de questões permite configurar o campo e a direção da ordenação.
+- status da conexão;
+- sala atual;
+- participantes conectados;
+- questões cadastradas;
+- busca e filtro por status;
+- contadores de eventos;
+- últimos eventos recebidos;
+- notificações persistentes;
+- indicação de notificações lidas e não lidas.
 
-Exemplo:
+## Arquitetura
+
+A aplicação segue arquitetura em camadas.
+
+O fluxo principal é:
 
 ```text
-GET /questoes?ordenar=id&direcao=desc
+Route
+  ↓
+Controller
+  ↓
+Service
+  ↓
+Repository
+  ↓
+Models / Sequelize
+  ↓
+PostgreSQL
 ```
 
-Os valores de direção aceitos são:
+O projeto mantém o acesso ao banco concentrado nos repositories.
 
-- `asc`
-- `desc`
+Os controllers não acessam diretamente o Sequelize.
 
-## Endpoint de dados relacionados
+## Padrões utilizados
 
-A API possui uma rota para consultar as questões relacionadas a uma disciplina:
+Entre os padrões aplicados estão:
+
+### Repository
+
+Responsável por concentrar o acesso ao banco de dados.
+
+### Dependency Injection
+
+Os repositories são injetados nos services por meio de:
 
 ```text
-GET /disciplinas/{id}/questoes
+src/config/container.js
 ```
 
-Exemplo:
+### DTO
+
+Os dados recebidos pelas rotas de questões são organizados antes de chegar à camada de serviço.
+
+Arquivo:
 
 ```text
-GET /disciplinas/1/questoes
+src/dtos/questao.dto.js
 ```
 
-As consultas de questões também utilizam os relacionamentos do Sequelize para retornar disciplina, categoria e assuntos relacionados.
-
-## Tratamento de erros
-
-A API possui middleware centralizado para tratamento de erros.
-
-Entre os códigos HTTP utilizados estão:
-
-- `200` - operação realizada com sucesso
-- `201` - recurso criado
-- `204` - recurso excluído
-- `400` - dados inválidos
-- `404` - recurso não encontrado
-- `409` - conflito ou violação de integridade
-- `500` - erro interno
-- `503` - falha de conexão com o banco de dados
-
-Por exemplo, uma disciplina que possui questões relacionadas não pode ser excluída. Nesse caso, a API retorna `409 Conflict`, preservando a integridade referencial do banco.
-
-## Estrutura do projeto
+## Estrutura principal
 
 ```text
 Trabalho 1 API/
 │
 ├── config/
 │   └── config.js
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── services/
+│   │   └── App.jsx
+│   └── package.json
 │
 ├── migrations/
 │
@@ -279,96 +322,155 @@ Trabalho 1 API/
 │   ├── questao.js
 │   ├── disciplina.js
 │   ├── categoria.js
-│   └── assunto.js
+│   ├── assunto.js
+│   └── notificacao.js
 │
 ├── seeders/
 │
 ├── src/
+│   ├── config/
 │   ├── controllers/
 │   ├── docs/
 │   │   └── openapi.yaml
+│   ├── dtos/
 │   ├── middlewares/
+│   ├── public/
 │   ├── repositories/
 │   ├── routes/
+│   ├── services/
+│   ├── websocket/
 │   └── app.js
 │
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
 ├── .env.example
-├── .gitignore
-├── .sequelizerc
+├── ARQUITETURA.md
 ├── package.json
 └── README.md
 ```
 
-## Configuração do ambiente
+## Docker
 
-Crie um arquivo `.env` na raiz do projeto utilizando o `.env.example` como referência.
+A aplicação pode ser executada completamente com Docker Compose.
 
-Exemplo:
+São criados dois serviços:
 
-```env
-DB_USERNAME=postgres
-DB_PASSWORD=sua_senha
-DB_DATABASE=banco_questoes
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_DIALECT=postgres
+```text
+app
+db
 ```
 
-O arquivo `.env` não deve ser enviado para o repositório, pois contém informações privadas de acesso ao banco de dados.
+O serviço `app` contém:
 
-## Como executar o projeto
+```text
+Node.js
+Express
+Socket.IO
+Frontend React compilado
+```
 
-### 1. Instalar as dependências
+O serviço `db` utiliza PostgreSQL.
+
+O banco possui volume persistente para que os dados não sejam perdidos ao reiniciar os containers.
+
+## Como executar com Docker
+
+### 1. Clonar o repositório
 
 ```bash
-npm install
+git clone URL_DO_REPOSITORIO
 ```
 
-### 2. Configurar o PostgreSQL
-
-Certifique-se de que o PostgreSQL esteja instalado e em execução.
-
-Configure as informações de acesso no arquivo `.env`.
-
-### 3. Criar o banco de dados
+Entre na pasta:
 
 ```bash
-npx sequelize-cli db:create
+cd trabalho-1-api-banco-questoes
 ```
 
-### 4. Executar as migrations
+### 2. Subir a aplicação
 
 ```bash
-npx sequelize-cli db:migrate
+docker compose up --build
 ```
 
-### 5. Popular o banco
+O Docker aguarda o PostgreSQL ficar saudável, executa as migrations, executa o seed inicial e inicia a aplicação.
 
-```bash
-npx sequelize-cli db:seed:all
-```
+### 3. Acessar o sistema
 
-### 6. Iniciar a API
-
-```bash
-node src/app.js
-```
-
-A aplicação ficará disponível em:
+Frontend e backend:
 
 ```text
 http://localhost:3000
 ```
 
-## Documentação Swagger
+Swagger:
 
-Com o servidor em execução, a documentação interativa da API pode ser acessada em:
+```text
+http://localhost:3000/docs
+```
+
+Health check:
+
+```text
+http://localhost:3000/health
+```
+
+### 4. Encerrar
+
+```bash
+docker compose down
+```
+
+### 5. Limpeza completa
+
+Para remover também o volume do PostgreSQL:
+
+```bash
+docker compose down -v
+```
+
+Depois é possível testar novamente como uma instalação limpa:
+
+```bash
+docker compose up --build
+```
+
+## Health check
+
+A aplicação possui:
+
+```text
+GET /health
+```
+
+Exemplo de resposta:
+
+```json
+{
+  "status": "ok",
+  "api": "online",
+  "websocket": "ativo"
+}
+```
+
+O PostgreSQL e a aplicação possuem health checks configurados no Docker Compose.
+
+## Swagger / OpenAPI
+
+A documentação interativa está disponível em:
+
+```text
+http://localhost:3000/docs
+```
+
+A rota antiga também foi mantida:
 
 ```text
 http://localhost:3000/api-docs
 ```
 
-O Swagger apresenta as rotas disponíveis e permite visualizar os métodos HTTP e os dados esperados pela API.
+O Swagger documenta questões, disciplinas, categorias, assuntos, notificações, filtros e alteração de status.
 
 ## Principais endpoints
 
@@ -383,6 +485,15 @@ PATCH  /questoes/:id
 DELETE /questoes/:id
 ```
 
+Exemplos de filtros:
+
+```text
+GET /questoes?dificuldade=facil
+GET /questoes?status=em_revisao
+GET /questoes?busca=porcentagem
+GET /questoes?status=aprovada&busca=porcentagem
+```
+
 ### Disciplinas
 
 ```text
@@ -393,7 +504,7 @@ PUT    /disciplinas/:id
 PATCH  /disciplinas/:id
 DELETE /disciplinas/:id
 
-GET    /disciplinas/:id/questoes
+GET /disciplinas/:id/questoes
 ```
 
 ### Categorias
@@ -418,46 +529,167 @@ PATCH  /assuntos/:id
 DELETE /assuntos/:id
 ```
 
-## Exemplo de criação de questão
-
-Requisição:
+### Notificações
 
 ```text
-POST /questoes
+GET    /notificacoes
+POST   /notificacoes
+GET    /notificacoes/:id
+DELETE /notificacoes/:id
+
+PATCH /notificacoes/:id/marcar-como-lida
+PATCH /notificacoes/marcar-todas-como-lidas
+```
+
+## Exemplo de alteração de status
+
+```text
+PATCH /questoes/12
 ```
 
 Body:
 
 ```json
 {
-    "enunciado": "Qual é 20% de 100?",
-    "disciplinaId": 1,
-    "categoriaId": 1,
-    "dificuldade": "facil",
-    "assuntoIds": [1, 2]
+  "status": "aprovada"
 }
 ```
 
-A operação cria a questão e seus relacionamentos com os assuntos utilizando uma transação.
-
-## Arquitetura
-
-O projeto utiliza separação de responsabilidades:
-
-- **Routes:** definição das rotas HTTP.
-- **Controllers:** recebem as requisições e retornam as respostas.
-- **Repositories:** concentram o acesso ao banco de dados por meio do Sequelize.
-- **Models:** representam as entidades e seus relacionamentos.
-- **Middlewares:** realizam o tratamento centralizado de erros.
-- **Migrations:** controlam a evolução da estrutura do banco.
-- **Seeders:** inserem os dados iniciais.
-
-Dessa forma, os controllers não realizam consultas diretamente no banco de dados, mantendo o acesso aos dados concentrado nos repositories.
-## Trabalho 3 - Refatoração Arquitetural
-
-Nesta etapa, a API foi refatorada para utilizar arquitetura em camadas e conceitos de MVC, mantendo o mesmo comportamento externo das versões anteriores.
-
-O fluxo principal da aplicação passou a ser:
+Quando o status muda, o sistema:
 
 ```text
-Route → Controller → Service → Repository → Banco de Dados
+1. atualiza a questão no PostgreSQL;
+2. cria uma notificação persistente;
+3. emite questao_atualizada;
+4. emite status_questao_alterado;
+5. emite notificacao_nova;
+6. atualiza os clientes conectados em tempo real.
+```
+
+## Migrations
+
+A estrutura do banco é controlada por migrations do Sequelize.
+
+Entre as migrations existentes estão:
+
+```text
+criação das disciplinas
+criação das categorias
+criação das questões
+criação dos assuntos
+criação de questao_assuntos
+padronização dos campos de auditoria
+adição do status das questões
+criação das notificações
+```
+
+No Docker, as migrations são executadas automaticamente na inicialização.
+
+Execução manual:
+
+```bash
+npm run migrate
+```
+
+## Seed
+
+Existe um seed com dados iniciais para disciplinas, categorias, assuntos, questões e relacionamentos.
+
+Execução manual:
+
+```bash
+npm run seed
+```
+
+O Sequelize registra a execução do seeder para evitar sua repetição nas reinicializações seguintes.
+
+## Transações
+
+A criação e atualização de questões com assuntos utiliza transações do Sequelize.
+
+Em caso de falha, é realizado rollback, evitando registros parciais no banco.
+
+## Tratamento de erros
+
+A aplicação possui middleware centralizado de erros.
+
+Entre os códigos HTTP utilizados estão:
+
+```text
+200 - operação realizada com sucesso
+201 - recurso criado
+204 - recurso excluído
+400 - dados inválidos
+404 - recurso não encontrado
+409 - conflito ou integridade
+500 - erro interno
+```
+
+## Segurança das configurações
+
+Credenciais reais não são versionadas.
+
+O arquivo:
+
+```text
+.env
+```
+
+está fora do repositório.
+
+O projeto disponibiliza apenas:
+
+```text
+.env.example
+```
+
+como referência para configuração.
+
+## Testes realizados
+
+Durante o desenvolvimento foram realizados testes com dois clientes conectados simultaneamente.
+
+Foi validado que:
+
+```text
+dois usuários podem entrar na mesma sala;
+a lista de participantes é sincronizada;
+criações de questões aparecem sem recarregar;
+alterações aparecem sem recarregar;
+exclusões aparecem sem recarregar;
+mudanças de status aparecem em tempo real;
+notificações são recebidas em tempo real;
+notificações permanecem no PostgreSQL;
+o estado lida permanece após recarregar;
+o cliente reconecta automaticamente;
+o cliente retorna à sala após reconexão;
+Docker Compose sobe aplicação e PostgreSQL;
+o frontend é servido pelo backend na porta 3000;
+o health check responde corretamente;
+o Swagger está disponível em /docs.
+```
+
+## Documentação arquitetural
+
+Mais detalhes sobre as decisões arquiteturais estão disponíveis em:
+
+```text
+ARQUITETURA.md
+docs/adr/
+```
+
+## Execução final esperada
+
+A partir de um clone limpo do repositório, o principal comando para iniciar todo o sistema é:
+
+```bash
+docker compose up --build
+```
+
+Após a inicialização:
+
+```text
+Aplicação: http://localhost:3000
+Swagger:   http://localhost:3000/docs
+Health:    http://localhost:3000/health
+```
